@@ -20,14 +20,16 @@ exports.login = async (req, res) => {
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
+      domain: process.env.COOKIE_DOMAIN || '.skalades.biz.id',
       maxAge: 15 * 60 * 1000
     });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
+      domain: process.env.COOKIE_DOMAIN || '.skalades.biz.id',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
@@ -49,7 +51,8 @@ exports.refresh = async (req, res) => {
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
+      domain: process.env.COOKIE_DOMAIN || '.skalades.biz.id',
       maxAge: 15 * 60 * 1000
     });
     res.json({ message: 'Token refreshed' });

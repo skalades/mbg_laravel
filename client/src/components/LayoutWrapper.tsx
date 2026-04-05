@@ -13,16 +13,36 @@ export default function LayoutWrapper({
   const isLoginPage = pathname === "/login";
 
   const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const userJson = localStorage.getItem("user");
     if (userJson) {
       setUser(JSON.parse(userJson));
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
+      // Redirect if not logged in and not on login page
+      if (!isLoginPage) {
+        window.location.href = "/login";
+      }
     }
-  }, [pathname]); // Refresh on route change or mount
+  }, [pathname, isLoginPage]);
 
   if (isLoginPage) {
     return <>{children}</>;
+  }
+
+  // Prevent rendering dashboard content before auth check
+  if (isLoading || (!user && !isLoginPage)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <p className="text-on-surface-variant font-medium animate-pulse text-sm">Memuat Sesi...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
