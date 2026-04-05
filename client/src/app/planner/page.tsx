@@ -71,8 +71,8 @@ export default function MealPlannerPage() {
   const [portionConfigs, setPortionConfigs] = useState<PortionConfig[]>([]);
 
   // Phase 3 States
-  const [bufferPortions, setBufferPortions] = useState<number>(5);
-  const [samplingPortions, setSamplingPortions] = useState<number>(1);
+  const [bufferPortions, setBufferPortions] = useState<number>(2);
+  const [samplingPortions, setSamplingPortions] = useState<number>(2);
   const [totalProduction, setTotalProduction] = useState<number>(0);
   const [allergyWarnings, setAllergyWarnings] = useState<any[]>([]);
   const [masterMenus, setMasterMenus] = useState<any[]>([]);

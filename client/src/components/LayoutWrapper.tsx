@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 
@@ -18,12 +18,19 @@ export default function LayoutWrapper({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [user, setUser] = useState(DEFAULT_USER);
 
-  // Get user from localStorage if available, otherwise use default public user
-  const user =
-    typeof window !== "undefined" && localStorage.getItem("user")
-      ? JSON.parse(localStorage.getItem("user")!)
-      : DEFAULT_USER;
+  useEffect(() => {
+    // Get user from localStorage if available, otherwise use default public user
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        setUser(DEFAULT_USER);
+      }
+    }
+  }, []);
 
   return (
     <div className="flex bg-background min-h-screen">

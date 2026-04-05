@@ -30,8 +30,8 @@ exports.createDailyMenu = async (req, res) => {
       school_id,
       menu_date,
       master_menu_id,
-      buffer_portions: parseInt(buffer_portions) || 0,
-      organoleptic_portions: parseInt(organoleptic_portions) || 2,
+      buffer_portions: parseInt(buffer_portions) ?? 2,
+      organoleptic_portions: parseInt(organoleptic_portions) ?? 2,
       items,
       created_by
     });

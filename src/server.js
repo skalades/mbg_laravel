@@ -9,6 +9,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Mock Auth Middleware for Public Mode
+const mockAuth = require('./middlewares/mockAuthMiddleware');
+
 // Middlewares
 app.use(cors({
   origin: [
@@ -18,6 +21,7 @@ app.use(cors({
   ],
   credentials: true
 }));
+app.use(mockAuth);
 app.use(cookieParser());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
