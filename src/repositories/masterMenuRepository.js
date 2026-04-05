@@ -31,6 +31,11 @@ const masterMenuRepository = {
           'INSERT INTO master_menu_items (master_menu_id, food_item_id, portion_name, weight_small, weight_large, unit_name, unit_quantity) VALUES (?, ?, ?, ?, ?, ?)',
           [masterMenuId, food_item_id, portion_name, weight_small || 0, weight_large || 0, unit_name, unit_quantity]
       );
+  },
+
+  async deleteById(id) {
+    const [result] = await db.execute('DELETE FROM master_menus WHERE id = ?', [id]);
+    return result.affectedRows > 0;
   }
 };
 

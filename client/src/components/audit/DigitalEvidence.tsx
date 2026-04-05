@@ -2,7 +2,8 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
-import { Camera, Trash2, CameraOff, PenTool, CheckCircle } from 'lucide-react';
+import { Camera, Trash2, CameraOff, PenTool, CheckCircle, Loader2 } from 'lucide-react';
+import { compressImage } from '@/utils/imageCompression';
 
 interface DigitalEvidenceProps {
   photo: string | null;
@@ -19,16 +20,28 @@ const DigitalEvidence: React.FC<DigitalEvidenceProps> = ({
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPhotoCaptured, setIsPhotoCaptured] = useState(!!photo);
+  const [isCompressing, setIsCompressing] = useState(false);
 
-  const handleCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhoto(reader.result as string);
+      setIsCompressing(true);
+      try {
+        const compressedBase64 = await compressImage(file);
+        setPhoto(compressedBase64);
         setIsPhotoCaptured(true);
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        console.error('Failed to compress image:', error);
+        // Fallback to original reader if compression fails
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPhoto(reader.result as string);
+          setIsPhotoCaptured(true);
+        };
+        reader.readAsDataURL(file);
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -75,10 +88,12 @@ const DigitalEvidence: React.FC<DigitalEvidenceProps> = ({
               <p className="text-sm font-medium text-slate-700">Ambil Foto Produk</p>
               <p className="text-xs text-slate-400 mt-1">Gunakan kamera HP untuk hasil terbaik</p>
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="mt-4 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md"
+                onClick={() => !isCompressing && fileInputRef.current?.click()}
+                disabled={isCompressing}
+                className="mt-4 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md flex items-center gap-2"
               >
-                Buka Kamera
+                {isCompressing ? <Loader2 className="animate-spin" size={16} /> : <Camera size={16} />}
+                {isCompressing ? 'Memproses...' : 'Buka Kamera'}
               </button>
             </div>
           )}

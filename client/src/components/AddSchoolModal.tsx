@@ -19,7 +19,11 @@ export default function AddSchoolModal({ isOpen, onClose, onSuccess, school }: A
     total_teachers: school?.total_teachers || 0,
     large_portion_count: school?.large_portion_count || 0,
     small_portion_count: school?.small_portion_count || 0,
-    location_address: school?.location_address || ""
+    location_address: school?.location_address || "",
+    siswa_laki_laki: school?.siswa_laki_laki || 0,
+    siswa_perempuan: school?.siswa_perempuan || 0,
+    guru_laki_laki: school?.guru_laki_laki || 0,
+    guru_perempuan: school?.guru_perempuan || 0,
   });
 
   const [loading, setLoading] = useState(false);
@@ -34,7 +38,11 @@ export default function AddSchoolModal({ isOpen, onClose, onSuccess, school }: A
         total_teachers: school.total_teachers || 0,
         large_portion_count: school.large_portion_count || 0,
         small_portion_count: school.small_portion_count || 0,
-        location_address: school.location_address || ""
+        location_address: school.location_address || "",
+        siswa_laki_laki: school.siswa_laki_laki || 0,
+        siswa_perempuan: school.siswa_perempuan || 0,
+        guru_laki_laki: school.guru_laki_laki || 0,
+        guru_perempuan: school.guru_perempuan || 0,
       });
     } else {
         setFormData({
@@ -44,7 +52,11 @@ export default function AddSchoolModal({ isOpen, onClose, onSuccess, school }: A
             total_teachers: 0,
             large_portion_count: 0,
             small_portion_count: 0,
-            location_address: ""
+            location_address: "",
+            siswa_laki_laki: 0,
+            siswa_perempuan: 0,
+            guru_laki_laki: 0,
+            guru_perempuan: 0,
         });
     }
   }, [school, isOpen]);
@@ -101,7 +113,7 @@ export default function AddSchoolModal({ isOpen, onClose, onSuccess, school }: A
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700">Kelompok Sasar</label>
               <select 
@@ -115,49 +127,117 @@ export default function AddSchoolModal({ isOpen, onClose, onSuccess, school }: A
                 <option value="SMA">SMA</option>
               </select>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">Jumlah Siswa</label>
-              <input 
-                required
-                type="number" 
-                placeholder="0"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                value={formData.total_beneficiaries}
-                onChange={(e) => setFormData({...formData, total_beneficiaries: parseInt(e.target.value) || 0})}
-              />
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-primary uppercase tracking-widest">Penerima Porsi Kecil</label>
+                <input 
+                  required
+                  type="number" 
+                  placeholder="0"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-primary/20 bg-primary/5 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-black text-primary"
+                  value={formData.small_portion_count}
+                  onChange={(e) => setFormData({...formData, small_portion_count: parseInt(e.target.value) || 0})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Penerima Porsi Besar</label>
+                <input 
+                  required
+                  type="number" 
+                  placeholder="0"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-rose-200 bg-rose-50/50 focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all font-black text-rose-600"
+                  value={formData.large_portion_count}
+                  onChange={(e) => setFormData({...formData, large_portion_count: parseInt(e.target.value) || 0})}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700">Jumlah Guru</label>
-              <input 
-                required
-                type="number" 
-                placeholder="0"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all underline decoration-dashed decoration-slate-300"
-                value={formData.total_teachers}
-                onChange={(e) => setFormData({...formData, total_teachers: parseInt(e.target.value) || 0})}
-              />
+          </div>
+
+          {/* New Administrative Gender fields */}
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+              Data Administrasi (Gender)
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+               <div className="space-y-2">
+                 <label className="text-[11px] font-bold text-slate-600">Siswa Laki-laki</label>
+                 <input 
+                   type="number" 
+                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-primary/10 outline-none text-sm font-bold"
+                   value={formData.siswa_laki_laki}
+                   onChange={(e) => {
+                     const val = parseInt(e.target.value) || 0;
+                     setFormData({
+                       ...formData, 
+                       siswa_laki_laki: val,
+                       total_beneficiaries: val + formData.siswa_perempuan
+                     });
+                   }}
+                 />
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[11px] font-bold text-slate-600">Siswa Perempuan</label>
+                 <input 
+                   type="number" 
+                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-primary/10 outline-none text-sm font-bold"
+                   value={formData.siswa_perempuan}
+                   onChange={(e) => {
+                     const val = parseInt(e.target.value) || 0;
+                     setFormData({
+                       ...formData, 
+                       siswa_perempuan: val,
+                       total_beneficiaries: formData.siswa_laki_laki + val
+                     });
+                   }}
+                 />
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[11px] font-bold text-slate-600">Guru Laki-laki</label>
+                 <input 
+                   type="number" 
+                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-primary/10 outline-none text-sm font-bold"
+                   value={formData.guru_laki_laki}
+                   onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      setFormData({
+                        ...formData, 
+                        guru_laki_laki: val,
+                        total_teachers: val + formData.guru_perempuan
+                      });
+                   }}
+                 />
+               </div>
+               <div className="space-y-2">
+                 <label className="text-[11px] font-bold text-slate-600">Guru Perempuan</label>
+                 <input 
+                   type="number" 
+                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-primary/10 outline-none text-sm font-bold"
+                   value={formData.guru_perempuan}
+                   onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      setFormData({
+                        ...formData, 
+                        guru_perempuan: val,
+                        total_teachers: formData.guru_laki_laki + val
+                      });
+                   }}
+                 />
+               </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-primary uppercase tracking-widest">Penerima Porsi Kecil</label>
-              <input 
-                required
-                type="number" 
-                placeholder="0"
-                className="w-full px-4 py-3 rounded-xl border-2 border-primary/20 bg-primary/5 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-black text-primary"
-                value={formData.small_portion_count}
-                onChange={(e) => setFormData({...formData, small_portion_count: parseInt(e.target.value) || 0})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Penerima Porsi Besar</label>
-              <input 
-                required
-                type="number" 
-                placeholder="0"
-                className="w-full px-4 py-3 rounded-xl border-2 border-rose-200 bg-rose-50/50 focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all font-black text-rose-600"
-                value={formData.large_portion_count}
-                onChange={(e) => setFormData({...formData, large_portion_count: parseInt(e.target.value) || 0})}
-              />
+
+            {/* Sub-totals in the same card */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+               <div className="space-y-1">
+                 <label className="text-[10px] font-black text-slate-400 uppercase">Jumlah Siswa</label>
+                 <p className="text-lg font-black text-slate-700">{formData.total_beneficiaries} <span className="text-[10px] font-medium text-slate-400">Total</span></p>
+               </div>
+               <div className="space-y-1">
+                 <label className="text-[10px] font-black text-slate-400 uppercase">Jumlah Guru</label>
+                 <p className="text-lg font-black text-slate-700">{formData.total_teachers} <span className="text-[10px] font-medium text-slate-400">Total</span></p>
+               </div>
             </div>
           </div>
 

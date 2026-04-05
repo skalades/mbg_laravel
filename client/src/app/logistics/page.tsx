@@ -103,8 +103,8 @@ export default function LogisticsTrackerPage() {
                 <span className="material-symbols-outlined text-2xl">local_shipping</span>
             </div>
             <div>
-                <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-headline">Global Shopping List</h2>
-                <p className="text-slate-500 mt-1 text-sm">Agregat Kebutuhan Logistik Sentral</p>
+                <h2 className="text-3xl font-bold tracking-tight text-slate-900 font-headline">Daftar Belanja Global</h2>
+                <p className="text-slate-500 mt-1 text-sm">Agregat Kebutuhan Logistik Pusat</p>
             </div>
         </div>
         
@@ -124,7 +124,7 @@ export default function LogisticsTrackerPage() {
              className="bg-slate-900 text-white px-6 py-2.5 rounded-2xl font-bold text-sm shadow-lg shadow-slate-900/20 hover:-translate-y-0.5 transition-all flex items-center gap-2"
           >
              <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-             Download PDF
+             Unduh PDF
           </button>
         </div>
       </div>

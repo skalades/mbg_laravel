@@ -24,6 +24,9 @@ const schoolRoutes = require('./routes/schoolRoutes');
 const plannerRoutes = require('./routes/plannerRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const portionRoutes = require('./routes/portionRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+const kitchenRoutes = require('./routes/kitchenRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Route Registration
 app.use('/api/auth', authRoutes);
@@ -31,9 +34,19 @@ app.use('/api/schools', schoolRoutes);
 app.use('/api/planner', plannerRoutes);
 app.use('/api/menus', menuRoutes);
 app.use('/api/portions', portionRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/kitchens', kitchenRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Basic Route for Health Check
 app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to Nutrizi API - (Root)',
+    status: 'Running'
+  });
+});
+
+app.get('/api', (req, res) => {
   res.json({
     message: 'Welcome to Nutrizi API - Nutritionist Module',
     status: 'Running',

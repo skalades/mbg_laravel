@@ -1,5 +1,12 @@
-CREATE DATABASE IF NOT EXISTS nutrizi_db;
 USE nutrizi_db;
+
+-- 0. Table: kitchens
+CREATE TABLE IF NOT EXISTS kitchens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    kitchen_name VARCHAR(100) NOT NULL,
+    address TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
 
 -- 1. Table: users
 CREATE TABLE IF NOT EXISTS users (
@@ -7,7 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role ENUM('ADMIN', 'NUTRITIONIST', 'CHEF') NOT NULL DEFAULT 'NUTRITIONIST',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    kitchen_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (kitchen_id) REFERENCES kitchens(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- 2. Table: schools
@@ -21,7 +30,9 @@ CREATE TABLE IF NOT EXISTS schools (
     location_address TEXT,
     calorie_target_min INT DEFAULT 0,
     calorie_target_max INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    kitchen_id INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (kitchen_id) REFERENCES kitchens(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 -- 3. Table: food_items (Master Data TKPI)
@@ -120,7 +131,7 @@ CREATE TABLE IF NOT EXISTS daily_menus (
     suhu_pemasakan DECIMAL(5,2) NULL DEFAULT NULL,
     suhu_distribusi DECIMAL(5,2) NULL DEFAULT NULL,
     catatan_qc TEXT,
-    foto_menu_url TEXT,
+    foto_menu_url LONGTEXT,
     tanda_tangan_digital LONGTEXT,
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -29,21 +29,40 @@ const dailyMenuRepository = {
   },
 
   async getById(id) {
-    const [rows] = await db.execute('SELECT * FROM daily_menus WHERE id = ?', [id]);
+    const [rows] = await db.execute(`
+      SELECT dm.*, s.school_name, k.kitchen_name, 
+             u.full_name AS nutritionist_name, u.title AS nutritionist_title
+      FROM daily_menus dm
+      JOIN schools s ON dm.school_id = s.id
+      LEFT JOIN kitchens k ON s.kitchen_id = k.id
+      LEFT JOIN users u ON dm.created_by = u.id
+      WHERE dm.id = ?
+    `, [id]);
     return rows[0];
   },
 
-  async getAllWithDetails(date) {
+  async getAllWithDetails(date, kitchenId = null) {
     let query = `
-      SELECT dm.*, s.school_name 
+      SELECT dm.*, s.school_name, k.kitchen_name 
       FROM daily_menus dm
       JOIN schools s ON dm.school_id = s.id
+      LEFT JOIN kitchens k ON s.kitchen_id = k.id
     `;
     const params = [];
+    const whereClauses = [];
 
     if (date) {
-      query += ` WHERE dm.menu_date = ? `;
+      whereClauses.push(`dm.menu_date = ?`);
       params.push(date);
+    }
+
+    if (kitchenId) {
+      whereClauses.push(`s.kitchen_id = ?`);
+      params.push(kitchenId);
+    }
+
+    if (whereClauses.length > 0) {
+      query += ` WHERE ` + whereClauses.join(' AND ');
     }
 
     query += ` ORDER BY dm.menu_date DESC`;
@@ -113,20 +132,35 @@ const dailyMenuRepository = {
     return this.getById(id);
   },
 
-  async getDailyLogisticsSummary(date) {
-    const [rows] = await db.execute(`
+  async getDailyLogisticsSummary(date, kitchenId = null) {
+    let query = `
       SELECT 
         fi.name AS food_name, 
         fi.category, 
         dmi.unit_name, 
-        SUM(dmi.total_raw_weight_gram) AS total_weight_gram
+        SUM(dmi.total_raw_weight_gram) AS total_weight_gram,
+        GROUP_CONCAT(DISTINCT s.school_name) as schools_list,
+        k.kitchen_name
       FROM daily_menu_items dmi
       JOIN daily_menus dm ON dmi.daily_menu_id = dm.id
+      JOIN schools s ON dm.school_id = s.id
+      LEFT JOIN kitchens k ON s.kitchen_id = k.id
       JOIN food_items fi ON dmi.food_item_id = fi.id
       WHERE dm.menu_date = ?
+    `;
+    const params = [date];
+
+    if (kitchenId) {
+      query += ` AND s.kitchen_id = ? `;
+      params.push(kitchenId);
+    }
+
+    query += `
       GROUP BY fi.id, dmi.unit_name
       ORDER BY total_weight_gram DESC
-    `, [date]);
+    `;
+    
+    const [rows] = await db.execute(query, params);
     return rows;
   }
 };

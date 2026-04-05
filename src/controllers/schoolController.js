@@ -2,7 +2,7 @@ const schoolService = require('../services/schoolService');
 
 exports.getAllSchools = async (req, res) => {
   try {
-    const schools = await schoolService.getAllSchools();
+    const schools = await schoolService.getAllSchools(req.kitchenId);
     res.json(schools);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -20,7 +20,7 @@ exports.getSchoolById = async (req, res) => {
 
 exports.createSchool = async (req, res) => {
   try {
-    const schoolId = await schoolService.createSchool(req.body);
+    const schoolId = await schoolService.createSchool({ ...req.body, kitchen_id: req.kitchenId });
     res.status(201).json({ message: 'School created successfully', schoolId });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -29,7 +29,7 @@ exports.createSchool = async (req, res) => {
 
 exports.updateSchool = async (req, res) => {
   try {
-    await schoolService.updateSchool(req.params.id, req.body);
+    await schoolService.updateSchool(req.params.id, req.body, req.kitchenId);
     res.json({ message: 'School updated successfully' });
   } catch (error) {
     res.status(400).json({ message: error.message });

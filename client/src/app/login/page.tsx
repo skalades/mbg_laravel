@@ -17,7 +17,13 @@ export default function LoginPage() {
     setErrorMessage("");
 
     try {
-      await api.post("/auth/login", formData);
+      const res = await api.post("/auth/login", formData);
+      
+      // Store basic user info for UI role-based filtering
+      if (res.data.user) {
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+      }
+
       setStatus("success");
       
       // Small delay for smooth transition
@@ -36,14 +42,18 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo/Brand Area */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-primary text-white shadow-xl shadow-primary/20 mb-4 animate-in fade-in zoom-in duration-700">
-            <Lock className="w-8 h-8" />
+          <div className="inline-flex items-center justify-center mb-4 animate-in fade-in zoom-in duration-700">
+            <img 
+              src="/assets/logo-nutrizi.png" 
+              alt="Nutrizi Logo" 
+              className="h-20 w-auto object-contain drop-shadow-xl"
+            />
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight italic">
             Nutrizi <span className="text-primary font-medium not-italic ml-1">Admin</span>
           </h1>
           <p className="text-slate-500 mt-2 font-medium uppercase tracking-widest text-xs">
-            Nutritionist Planning System
+            Sistem Penyusun Nutrisi (MBG)
           </p>
         </div>
 
@@ -61,7 +71,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
-                Username
+                Nama Pengguna
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
@@ -82,7 +92,7 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1">
-                Password
+                Kata Sandi
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
@@ -116,7 +126,7 @@ export default function LoginPage() {
               {status === "loading" ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  MENDOTENTISI...
+                  MEMPROSES...
                 </>
               ) : (
                 <>
@@ -128,14 +138,14 @@ export default function LoginPage() {
 
           <div className="mt-8 pt-6 border-t border-slate-100 text-center">
             <p className="text-slate-400 text-sm font-medium">
-              Lupa password? Hubungi <span className="text-primary font-bold cursor-pointer hover:underline underline-offset-4">IT Support</span>
+              Lupa sandi? Hubungi <a href="https://wa.me/6285188449304?text=Halo%20IT%20Support%2C%20saya%20lupa%20password%20Nutrizi" target="_blank" rel="noopener noreferrer" className="text-primary font-bold cursor-pointer hover:underline underline-offset-4">IT Support</a>
             </p>
           </div>
         </div>
 
         {/* Footer Info */}
-        <p className="text-center mt-8 text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">
-          &copy; 2026 Nutrizi MBG - Alpha 1.5
+        <p className="text-center mt-8 text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">
+          Developed by Nadir under SKALADES Group
         </p>
       </div>
     </div>

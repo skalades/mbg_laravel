@@ -37,7 +37,7 @@ class AuthService {
     }
 
     const accessToken = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      { id: user.id, username: user.username, role: user.role, kitchen_id: user.kitchen_id },
       process.env.JWT_SECRET || 'your_super_secret_key_here',
       { expiresIn: '15m' }
     );
@@ -65,7 +65,7 @@ class AuthService {
 
     const user = await userRepository.findById(decoded.id);
     const newAccessToken = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      { id: user.id, username: user.username, role: user.role, kitchen_id: user.kitchen_id },
       process.env.JWT_SECRET || 'your_super_secret_key_here',
       { expiresIn: '15m' }
     );

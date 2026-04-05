@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const menuController = require('../controllers/menuController');
 const { verifyToken, authorizeRole } = require('../middlewares/authMiddleware');
+const isolationMiddleware = require('../middlewares/isolationMiddleware');
 
 // All menu routes require authentication
 router.use(verifyToken);
@@ -15,6 +16,9 @@ router.get('/master/:id', authorizeRole(['ADMIN', 'NUTRITIONIST']), menuControll
 // POST /api/menus/master - Create a new master menu template
 router.post('/master', authorizeRole(['ADMIN', 'NUTRITIONIST']), menuController.createMasterMenu);
 
+// DELETE /api/menus/master/:id - Delete a master menu template
+router.delete('/master/:id', authorizeRole(['ADMIN', 'NUTRITIONIST']), menuController.deleteMasterMenu);
+
 // POST /api/menus/check-allergies - Check for allergy conflicts
 router.post('/check-allergies', authorizeRole(['ADMIN', 'NUTRITIONIST']), menuController.checkAllergies);
 
@@ -22,15 +26,15 @@ router.post('/check-allergies', authorizeRole(['ADMIN', 'NUTRITIONIST']), menuCo
 router.post('/daily', authorizeRole(['ADMIN', 'NUTRITIONIST']), menuController.createDailyMenu);
 
 // GET /api/menus/daily - List all daily menus for audit dashboard
-router.get('/daily', authorizeRole(['ADMIN', 'NUTRITIONIST', 'CHEF']), menuController.getDailyMenus);
+router.get('/daily', authorizeRole(['ADMIN', 'NUTRITIONIST', 'CHEF']), isolationMiddleware, menuController.getDailyMenus);
 
 // GET /api/menus/daily/logistics/summary - Get logistics summary
-router.get('/daily/logistics/summary', authorizeRole(['ADMIN', 'NUTRITIONIST']), menuController.getDailyLogisticsSummary);
+router.get('/daily/logistics/summary', authorizeRole(['ADMIN', 'NUTRITIONIST']), isolationMiddleware, menuController.getDailyLogisticsSummary);
 
 // GET /api/menus/daily/:id - Get specific daily menu details for audit
-router.get('/daily/:id', authorizeRole(['ADMIN', 'NUTRITIONIST', 'CHEF']), menuController.getDailyMenuDetails);
+router.get('/daily/:id', authorizeRole(['ADMIN', 'NUTRITIONIST', 'CHEF']), isolationMiddleware, menuController.getDailyMenuDetails);
 
 // POST /api/menus/daily/:id/audit - Submit audit/QC results
-router.post('/daily/:id/audit', authorizeRole(['ADMIN', 'NUTRITIONIST', 'CHEF']), menuController.submitAudit);
+router.post('/daily/:id/audit', authorizeRole(['ADMIN', 'NUTRITIONIST', 'CHEF']), isolationMiddleware, menuController.submitAudit);
 
 module.exports = router;

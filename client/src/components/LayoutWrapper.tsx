@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 
@@ -10,6 +11,15 @@ export default function LayoutWrapper({
 }) {
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
+
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userJson = localStorage.getItem("user");
+    if (userJson) {
+      setUser(JSON.parse(userJson));
+    }
+  }, [pathname]); // Refresh on route change or mount
 
   if (isLoginPage) {
     return <>{children}</>;
@@ -26,7 +36,7 @@ export default function LayoutWrapper({
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
             <input 
               className="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full focus:ring-2 focus:ring-primary/20 text-sm" 
-              placeholder="Search data or schools..." 
+              placeholder="Cari data, sekolah, atau menu..." 
               type="text" 
             />
           </div>
@@ -44,11 +54,15 @@ export default function LayoutWrapper({
           
           <div className="flex items-center gap-3 pl-4 border-l border-outline-variant/30">
             <div className="text-right">
-              <p className="text-sm font-bold font-headline text-primary leading-none">Admin Nutrizi</p>
-              <p className="text-[10px] text-on-surface-variant mt-1">Super User</p>
+              <p className="text-sm font-bold font-headline text-primary leading-none">
+                {user?.full_name || user?.username || "Pengguna"}
+              </p>
+              <p className="text-[10px] text-on-surface-variant mt-1 capitalize font-bold tracking-widest text-emerald-600">
+                {user?.role === 'ADMIN' ? 'Administrator' : 'Ahli Gizi'}
+              </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-emerald-900 border-2 border-primary-fixed">
-              AG
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-emerald-900 border-2 border-primary-fixed uppercase">
+              {(user?.full_name || user?.username || "N").charAt(0)}
             </div>
           </div>
         </div>

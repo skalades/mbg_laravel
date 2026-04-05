@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 class FoodRepository {
   async getAll(limit = 100) {
-    const [rows] = await db.execute('SELECT * FROM food_items LIMIT ?', [limit]);
+    const [rows] = await db.execute('SELECT * FROM food_items ORDER BY id DESC LIMIT ?', [limit]);
     return rows;
   }
 

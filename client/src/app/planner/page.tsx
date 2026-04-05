@@ -3,11 +3,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import { cn } from "@/lib/utils";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
 import SaveTemplateModal from "@/components/SaveTemplateModal";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
 
 interface FoodItem {
   id: number;
@@ -83,6 +79,7 @@ export default function MealPlannerPage() {
   const [isMasterMenuOpen, setIsMasterMenuOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [menuDate, setMenuDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => { 
     fetchSchools(); 
@@ -184,7 +181,7 @@ export default function MealPlannerPage() {
     calculateTotals(selectedItems); 
   }, [selectedItems, selectedSchools, portionConfigs]);
 
-  const calorieStatus = (type: 'small' | 'large') => {
+  const getNutrientStatus = (type: 'small' | 'large', nutrient: 'energy_kcal' | 'protein_g' | 'fat_g' | 'carbs_g') => {
     if (selectedSchools.length === 0) return "neutral";
     const totals = type === 'small' ? totalsSmall : totalsLarge;
     if (totals.energy_kcal === 0) return "neutral";
@@ -192,14 +189,31 @@ export default function MealPlannerPage() {
     const config = portionConfigs.find(p => p.name.includes(type === 'small' ? "Kecil" : "Besar"));
     if (!config) return "neutral";
 
-    const target = config.meal_energy;
-    if (totals.energy_kcal < target * 0.9) return "low";
-    if (totals.energy_kcal > target * 1.1) return "high";
+    const keyMap: Record<string, string> = {
+      energy_kcal: 'meal_energy',
+      protein_g: 'meal_protein',
+      fat_g: 'meal_fat',
+      carbs_g: 'meal_carbs'
+    };
+    
+    const target = (config as any)[keyMap[nutrient]];
+    if (totals[nutrient] < target * 0.9) return "low";
+    if (totals[nutrient] > target * 1.1) return "high";
     return "ideal";
   };
 
-  const getStatusColor = (type: 'small' | 'large') => {
-    switch (calorieStatus(type)) {
+  const getNutrientColor = (type: 'small' | 'large', nutrient: 'energy_kcal' | 'protein_g' | 'fat_g' | 'carbs_g') => {
+    const status = getNutrientStatus(type, nutrient);
+    switch (status) {
+      case 'ideal': return 'bg-emerald-500';
+      case 'low': return 'bg-amber-500';
+      case 'high': return 'bg-rose-500';
+      default: return 'bg-slate-700';
+    }
+  };
+
+  const getStatusLabelColor = (status: string) => {
+    switch (status) {
       case 'ideal': return 'bg-emerald-500 text-white animate-pulse-ideal border border-white/20';
       case 'low': return 'bg-amber-500 text-white';
       case 'high': return 'bg-rose-500 text-white';
@@ -299,7 +313,7 @@ export default function MealPlannerPage() {
       await Promise.all(selectedSchools.map(school => 
           api.post("/menus/daily", {
             school_id: school.id,
-            menu_date: new Date().toISOString().split('T')[0],
+            menu_date: menuDate,
             buffer_portions: bufferPortions,
             organoleptic_portions: samplingPortions,
             items: selectedItems.map(item => ({
@@ -358,8 +372,8 @@ export default function MealPlannerPage() {
                 <span className="material-symbols-outlined text-2xl">set_meal</span>
             </div>
             <div>
-                <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">Precision Planner</h2>
-                <p className="text-on-surface-variant mt-1 text-sm">Dual-Portion System Optimized</p>
+                <h2 className="text-3xl font-bold tracking-tight text-primary font-headline">Penyusun Menu Presisi</h2>
+                <p className="text-on-surface-variant mt-1 text-sm">Sistem Dua-Porsi Teroptimasi</p>
             </div>
         </div>
         
@@ -369,7 +383,7 @@ export default function MealPlannerPage() {
             className="bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 px-6 py-2.5 rounded-2xl font-bold text-sm transition-all flex items-center gap-2"
           >
              <span className="material-symbols-outlined text-[20px]">auto_stories</span>
-             Load Template
+             Muat Templat
           </button>
           
           <button 
@@ -384,7 +398,7 @@ export default function MealPlannerPage() {
           <div className="relative">
              <button 
                 onClick={() => setIsTargetDropdownOpen(!isTargetDropdownOpen)}
-                className="bg-white p-1.5 rounded-2xl shadow-sm border border-black/5 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50 transition-colors w-48"
+                className="bg-white p-1.5 rounded-2xl shadow-sm border border-black/5 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50 transition-colors w-40"
              >
                 <div className="flex items-center gap-2">
                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-3">Target</span>
@@ -423,6 +437,16 @@ export default function MealPlannerPage() {
                  </div>
              )}
           </div>
+
+          <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-black/5 flex items-center gap-2 w-48 relative">
+             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest pl-3">Tanggal</span>
+             <input 
+                type="date" 
+                value={menuDate}
+                onChange={(e) => setMenuDate(e.target.value)}
+                className="text-sm font-bold text-primary outline-none cursor-pointer w-full pr-2"
+             />
+          </div>
         </div>
       </div>
 
@@ -433,11 +457,11 @@ export default function MealPlannerPage() {
                 <span className="material-symbols-outlined text-3xl">warning</span>
             </div>
             <div>
-                <h4 className="text-rose-600 font-black font-headline uppercase tracking-wide text-sm mb-1">Student Allergy Detected!</h4>
+                <h4 className="text-rose-600 font-black font-headline uppercase tracking-wide text-sm mb-1">Alergi Siswa Terdeteksi!</h4>
                 <div className="flex flex-wrap gap-2 mt-2">
                     {allergyWarnings.map((w, i) => (
                         <span key={i} className="bg-white border border-rose-100 px-3 py-1 rounded-full text-[11px] font-bold text-rose-700">
-                            {w.student_name}: No {w.allergen_match}
+                            {w.student_name}: Dilarang {w.allergen_match}
                         </span>
                     ))}
                 </div>
@@ -635,62 +659,108 @@ export default function MealPlannerPage() {
                     <h5 className="text-[10px] font-black tracking-[0.2em] uppercase text-slate-500">Dual Analysis</h5>
                 </div>
 
-                <div className="space-y-8">
+                <div className="space-y-12">
                     {/* Small Analysis */}
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         <div className="flex justify-between items-end">
                             <div>
                                 <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Porsi Kecil</p>
                                 <p className="text-3xl font-black font-headline tracking-tighter">{Math.round(totalsSmall.energy_kcal)} <span className="text-xs opacity-40">kkal</span></p>
                             </div>
-                            <div className={cn("px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest", getStatusColor('small'))}>
-                                {calorieStatus('small')}
+                            <div className={cn("px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest", getStatusLabelColor(getNutrientStatus('small', 'energy_kcal')))}>
+                                {getNutrientStatus('small', 'energy_kcal')}
                             </div>
                         </div>
-                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div 
-                                className={cn("h-full transition-all duration-700", getStatusColor('small'))} 
-                                style={{ width: `${Math.min((totalsSmall.energy_kcal / (portionConfigs.find(p => p.name.includes("Kecil"))?.meal_energy || 500)) * 100, 100)}%` }}
-                             />
+                        
+                        <div className="space-y-4 bg-white/5 p-5 rounded-3xl border border-white/5">
+                           {/* Proteins */}
+                           <div className="space-y-2">
+                               <div className="flex justify-between text-[10px] font-bold">
+                                   <span className="text-slate-400">Protein</span>
+                                   <span className={cn(getNutrientStatus('small', 'protein_g') === 'ideal' ? "text-emerald-400" : "text-white")}>
+                                       {Math.round(totalsSmall.protein_g)}g / {Math.round(portionConfigs.find(p => p.name.includes("Kecil"))?.meal_protein || 0)}g
+                                   </span>
+                               </div>
+                               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                   <div className={cn("h-full transition-all duration-700", getNutrientColor('small', 'protein_g'))} style={{ width: `${Math.min((totalsSmall.protein_g / (portionConfigs.find(p => p.name.includes("Kecil"))?.meal_protein || 1)) * 100, 100)}%` }} />
+                               </div>
+                           </div>
+                           {/* Fat */}
+                           <div className="space-y-2">
+                               <div className="flex justify-between text-[10px] font-bold">
+                                   <span className="text-slate-400">Lemak</span>
+                                   <span className={cn(getNutrientStatus('small', 'fat_g') === 'ideal' ? "text-emerald-400" : "text-white")}>
+                                       {Math.round(totalsSmall.fat_g)}g / {Math.round(portionConfigs.find(p => p.name.includes("Kecil"))?.meal_fat || 0)}g
+                                   </span>
+                               </div>
+                               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                   <div className={cn("h-full transition-all duration-700", getNutrientColor('small', 'fat_g'))} style={{ width: `${Math.min((totalsSmall.fat_g / (portionConfigs.find(p => p.name.includes("Kecil"))?.meal_fat || 1)) * 100, 100)}%` }} />
+                               </div>
+                           </div>
+                           {/* Carbs */}
+                           <div className="space-y-2">
+                               <div className="flex justify-between text-[10px] font-bold">
+                                   <span className="text-slate-400">Karbohidrat</span>
+                                   <span className={cn(getNutrientStatus('small', 'carbs_g') === 'ideal' ? "text-emerald-400" : "text-white")}>
+                                       {Math.round(totalsSmall.carbs_g)}g / {Math.round(portionConfigs.find(p => p.name.includes("Kecil"))?.meal_carbs || 0)}g
+                                   </span>
+                               </div>
+                               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                   <div className={cn("h-full transition-all duration-700", getNutrientColor('small', 'carbs_g'))} style={{ width: `${Math.min((totalsSmall.carbs_g / (portionConfigs.find(p => p.name.includes("Kecil"))?.meal_carbs || 1)) * 100, 100)}%` }} />
+                               </div>
+                           </div>
                         </div>
                     </div>
 
                     {/* Large Analysis */}
-                    <div className="space-y-4 border-t border-white/5 pt-6">
+                    <div className="space-y-6 border-t border-white/5 pt-8">
                         <div className="flex justify-between items-end">
                             <div>
-                                <p className="text-[10px] font-black text-rose-600 uppercase tracking-[0.2em]">Porsi Besar</p>
+                                <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Porsi Besar</p>
                                 <p className="text-3xl font-black font-headline tracking-tighter">{Math.round(totalsLarge.energy_kcal)} <span className="text-xs opacity-40">kkal</span></p>
                             </div>
-                            <div className={cn("px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest", getStatusColor('large'))}>
-                                {calorieStatus('large')}
+                            <div className={cn("px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest", getStatusLabelColor(getNutrientStatus('large', 'energy_kcal')))}>
+                                {getNutrientStatus('large', 'energy_kcal')}
                             </div>
                         </div>
-                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                            <div 
-                                className={cn("h-full transition-all duration-700", getStatusColor('large'))} 
-                                style={{ width: `${Math.min((totalsLarge.energy_kcal / (portionConfigs.find(p => p.name.includes("Besar"))?.meal_energy || 700)) * 100, 100)}%` }}
-                             />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Macro Split Summary */}
-                <div className="pt-8 border-t border-white/10 flex justify-center">
-                    <div className="w-32 h-32 relative">
-                        <Doughnut 
-                            data={{
-                                labels: ['Karbo', 'Pro', 'Lemak'],
-                                datasets: [{
-                                    data: [(totalsSmall.carbs_g + totalsLarge.carbs_g) * 4, (totalsSmall.protein_g + totalsLarge.protein_g) * 4, (totalsSmall.fat_g + totalsLarge.fat_g) * 9],
-                                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
-                                    borderWidth: 0
-                                }]
-                            }} 
-                            options={{ cutout: '80%', plugins: { legend: { display: false } } }} 
-                        />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span className="text-[8px] font-black text-slate-500 uppercase">Avg Makro</span>
+                        
+                        <div className="space-y-4 bg-white/5 p-5 rounded-3xl border border-white/5">
+                           {/* Proteins */}
+                           <div className="space-y-2">
+                               <div className="flex justify-between text-[10px] font-bold">
+                                   <span className="text-slate-400">Protein</span>
+                                   <span className={cn(getNutrientStatus('large', 'protein_g') === 'ideal' ? "text-emerald-400" : "text-white")}>
+                                       {Math.round(totalsLarge.protein_g)}g / {Math.round(portionConfigs.find(p => p.name.includes("Besar"))?.meal_protein || 0)}g
+                                   </span>
+                               </div>
+                               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                   <div className={cn("h-full transition-all duration-700", getNutrientColor('large', 'protein_g'))} style={{ width: `${Math.min((totalsLarge.protein_g / (portionConfigs.find(p => p.name.includes("Besar"))?.meal_protein || 1)) * 100, 100)}%` }} />
+                               </div>
+                           </div>
+                           {/* Fat */}
+                           <div className="space-y-2">
+                               <div className="flex justify-between text-[10px] font-bold">
+                                   <span className="text-slate-400">Lemak</span>
+                                   <span className={cn(getNutrientStatus('large', 'fat_g') === 'ideal' ? "text-emerald-400" : "text-white")}>
+                                       {Math.round(totalsLarge.fat_g)}g / {Math.round(portionConfigs.find(p => p.name.includes("Besar"))?.meal_fat || 0)}g
+                                   </span>
+                               </div>
+                               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                   <div className={cn("h-full transition-all duration-700", getNutrientColor('large', 'fat_g'))} style={{ width: `${Math.min((totalsLarge.fat_g / (portionConfigs.find(p => p.name.includes("Besar"))?.meal_fat || 1)) * 100, 100)}%` }} />
+                               </div>
+                           </div>
+                           {/* Carbs */}
+                           <div className="space-y-2">
+                               <div className="flex justify-between text-[10px] font-bold">
+                                   <span className="text-slate-400">Karbohidrat</span>
+                                   <span className={cn(getNutrientStatus('large', 'carbs_g') === 'ideal' ? "text-emerald-400" : "text-white")}>
+                                       {Math.round(totalsLarge.carbs_g)}g / {Math.round(portionConfigs.find(p => p.name.includes("Besar"))?.meal_carbs || 0)}g
+                                   </span>
+                               </div>
+                               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                   <div className={cn("h-full transition-all duration-700", getNutrientColor('large', 'carbs_g'))} style={{ width: `${Math.min((totalsLarge.carbs_g / (portionConfigs.find(p => p.name.includes("Besar"))?.meal_carbs || 1)) * 100, 100)}%` }} />
+                               </div>
+                           </div>
                         </div>
                     </div>
                 </div>
@@ -700,7 +770,7 @@ export default function MealPlannerPage() {
                     disabled={isSaving || selectedItems.length === 0}
                     className="w-full bg-primary py-6 rounded-3xl font-black font-headline text-white shadow-xl hover:shadow-primary/20 hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 text-xs uppercase tracking-widest"
                 >
-                    {isSaving ? "Sinkronisasi..." : "Kirim ke Dapur"}
+                    {isSaving ? "Menyinkronkan..." : "Kirim ke Dapur"}
                 </button>
             </div>
         </div>
@@ -719,7 +789,7 @@ export default function MealPlannerPage() {
               <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsMasterMenuOpen(false)} />
               <div className="relative bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
                   <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-                      <h3 className="text-2xl font-bold text-slate-900">Master Menu Library</h3>
+                      <h3 className="text-2xl font-bold text-slate-900">Pustaka Menu Induk</h3>
                       <button onClick={() => setIsMasterMenuOpen(false)} className="w-12 h-12 rounded-full hover:bg-slate-100 flex items-center justify-center">
                           <span className="material-symbols-outlined">close</span>
                       </button>

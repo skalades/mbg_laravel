@@ -15,16 +15,26 @@ export const generateKitchenInstructionPDF = (menu: any) => {
   doc.setFillColor(...emerald500);
   doc.rect(0, 0, 210, 8, 'F');
   
+  // Logo
+  try {
+    doc.addImage('/assets/logo-pdf.png', 'PNG', 15, 12, 16, 16);
+  } catch (e) {
+    console.error('Failed to load PDF logo:', e);
+  }
+
   // Header Text
-  doc.setFontSize(22);
+  doc.setFontSize(20);
   doc.setTextColor(...slate800);
   doc.setFont("helvetica", "bold");
-  doc.text('DOKUMEN LOGISTIK & INSTRUKSI DAPUR', 105, 24, { align: 'center' });
+  doc.text('DOKUMEN LOGISTIK & INSTRUKSI DAPUR', 38, 21);
   
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(...slate500);
   doc.setFont("helvetica", "normal");
-  doc.text('Program Pemberian Makanan Bergizi', 105, 30, { align: 'center' });
+  const subHeader = menu.kitchen_name 
+    ? `${menu.kitchen_name} | Program Makan Bergizi`
+    : 'Program Pemberian Makanan Bergizi';
+  doc.text(subHeader, 38, 27);
   
   // Separator
   doc.setDrawColor(226, 232, 240);
@@ -75,63 +85,94 @@ export const generateKitchenInstructionPDF = (menu: any) => {
   doc.setDrawColor(226, 232, 240);
   doc.line(15, 82, 195, 82);
 
-  // Items Table
-  doc.setFontSize(12);
+  // Items Table - Section 1: PORSI KECIL
+  doc.setFontSize(11);
   doc.setTextColor(...slate800);
   doc.setFont("helvetica", "bold");
-  doc.text('MANUAL TAKARAN COOKING & BAHAN MENTAH', 15, 92);
+  doc.text('A. INSTRUKSI PORSI KECIL (PAUD / SD)', 15, 92);
 
-  const tableBody = menu.items.map((item: any) => {
-    const wSmall = parseFloat(item.weight_small) || 0;
-    const wLarge = parseFloat(item.weight_large) || 0;
+  const tableSmall = menu.items.map((item: any) => {
+    const wS = parseFloat(item.weight_small) || 0;
     const yieldFact = parseFloat(item.yield_factor) || 1.0;
-    
-    const cookedSmall = wSmall * yieldFact;
-    const cookedLarge = wLarge * yieldFact;
+    const cookedS = wS * yieldFact;
     
     // SRT Display (Cooked)
-    let srtDisplay = '-';
-    if (item.unit_name?.toLowerCase() === 'gram') {
-      srtDisplay = wSmall === wLarge 
-        ? `${cookedSmall.toFixed(0)} g (Mtg)`
-        : `${cookedSmall.toFixed(0)} / ${cookedLarge.toFixed(0)} g (Mtg)`;
-    } else {
-      srtDisplay = `${item.unit_quantity || 0} ${item.unit_name || ''}`;
-    }
-
-    // Raw Weight Display
-    const rawDisplay = wSmall === wLarge
-      ? `${wSmall.toFixed(1)} g`
-      : `${wSmall.toFixed(1)} / ${wLarge.toFixed(1)} g`;
-
+    let srtDisp = item.unit_name?.toLowerCase() === 'gram' ? `${cookedS.toFixed(0)} g` : `${item.unit_quantity || 0} ${item.unit_name || ''}`;
+    
     return [
       item.food_name || item.portion_name,
-      srtDisplay,
-      rawDisplay,
-      `${(item.total_raw_weight_gram / 1000).toFixed(2)} kg`
+      srtDisp,
+      `${wS.toFixed(1)} g`
     ];
   });
 
   autoTable(doc, {
     startY: 96,
-    head: [['Bahan Induk Utama', 'Takaran SRT (K/B)', 'Berat Mentah (K/B)', 'Total Target Belanja']],
-    body: tableBody,
+    head: [['Bahan Utama', 'Takaran Matang (SRT)', 'Berat Mentah']],
+    body: tableSmall,
     theme: 'grid',
-    headStyles: { fillColor: slate800, textColor: [255, 255, 255], fontStyle: 'bold' },
-    styles: { fontSize: 9, cellPadding: 4, lineColor: [226, 232, 240], lineWidth: 0.1 },
+    headStyles: { fillColor: [15, 118, 110], textColor: [255, 255, 255], fontStyle: 'bold' },
+    styles: { fontSize: 8.5, cellPadding: 3, lineColor: [226, 232, 240], lineWidth: 0.1 },
+    margin: { left: 15, right: 15 }
+  });
+
+  // Items Table - Section 2: PORSI BESAR
+  const nextY2 = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text('B. INSTRUKSI PORSI BESAR (SMP / SMA / GURU)', 15, nextY2);
+
+  const tableLarge = menu.items.map((item: any) => {
+    const wL = parseFloat(item.weight_large) || 0;
+    const yieldFact = parseFloat(item.yield_factor) || 1.0;
+    const cookedL = wL * yieldFact;
+    
+    // SRT Display (Cooked)
+    let srtDisp = item.unit_name?.toLowerCase() === 'gram' ? `${cookedL.toFixed(0)} g` : `${item.unit_quantity || 0} ${item.unit_name || ''}`;
+    
+    return [
+      item.food_name || item.portion_name,
+      srtDisp,
+      `${wL.toFixed(1)} g`
+    ];
+  });
+
+  autoTable(doc, {
+    startY: nextY2 + 4,
+    head: [['Bahan Utama', 'Takaran Matang (SRT)', 'Berat Mentah']],
+    body: tableLarge,
+    theme: 'grid',
+    headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
+    styles: { fontSize: 8.5, cellPadding: 3, lineColor: [226, 232, 240], lineWidth: 0.1 },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     margin: { left: 15, right: 15 }
   });
 
-  // Notation Legend
-  const legendY = (doc as any).lastAutoTable.finalY + 6;
-  doc.setFontSize(7);
-  doc.setTextColor(...slate500);
-  doc.setFont("helvetica", "italic");
-  doc.text('* Notasi (K/B): K = Porsi Kecil (SD/PAUD), B = Porsi Besar (SMP/SMA/Guru)', 15, legendY);
+  // Logistics Table - Section 3: REKAPITULASI LOGISTIK (TOTAL BELANJA)
+  const nextY3 = (doc as any).lastAutoTable.finalY + 10;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text('C. REKAPITULASI LOGISTIK (TOTAL BELANJA)', 15, nextY3);
+
+  const tableLogistics = menu.items.map((item: any) => {
+    return [
+        item.food_name || item.portion_name,
+        `${(item.total_raw_weight_gram / 1000).toFixed(2)} kg`
+    ];
+  });
+
+  autoTable(doc, {
+    startY: nextY3 + 4,
+    head: [['Bahan Utama', 'Volume Total Belanja']],
+    body: tableLogistics,
+    theme: 'grid',
+    headStyles: { fillColor: [245, 158, 11], textColor: [255, 255, 255], fontStyle: 'bold' },
+    styles: { fontSize: 8.5, cellPadding: 3, lineColor: [226, 232, 240], lineWidth: 0.1 },
+    margin: { left: 15, right: 15 }
+  });
 
   // Footer / Instructions
-  const finalY = legendY + 10;
+  const finalY = (doc as any).lastAutoTable.finalY + 8;
 
   doc.setFillColor(248, 250, 252);
   doc.setDrawColor(226, 232, 240);
@@ -159,10 +200,10 @@ export const generateKitchenInstructionPDF = (menu: any) => {
 
   // Footer stamp
   const generatedDate = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: localeID });
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(...slate500);
   doc.setFont("helvetica", "italic");
-  doc.text(`Dicetak melalui Sistem Elektornik Nutrizi pada ${generatedDate} - Laporan Bebas Kertas No. ${menu.id}`, 105, 290, { align: 'center' });
+  doc.text(`Developed by Nadir under SKALADES Group | Dicetak pada ${generatedDate} - Laporan Bebas Kertas #${menu.id}`, 105, 290, { align: 'center' });
 
   // Save the PDF
   doc.save(`Instruksi_Dapur_${menu.school_name.replace(/\s+/g, '_')}_${format(new Date(menu.menu_date), 'yyyyMMdd')}.pdf`);
@@ -181,16 +222,26 @@ export const generateQCReportPDF = (menu: any) => {
   doc.setFillColor(...statusColor);
   doc.rect(0, 0, 210, 8, 'F');
   
+  // Logo
+  try {
+    doc.addImage('/assets/logo-pdf.png', 'PNG', 15, 12, 16, 16);
+  } catch (e) {
+    console.error('Failed to load PDF logo:', e);
+  }
+
   // Header Text
-  doc.setFontSize(22);
+  doc.setFontSize(20);
   doc.setTextColor(...slate800);
   doc.setFont("helvetica", "bold");
-  doc.text('DOKUMEN AUDIT & QC', 105, 24, { align: 'center' });
-  
-  doc.setFontSize(11);
+  doc.text('DOKUMEN AUDIT & QC', 38, 21);
+
+  doc.setFontSize(10);
   doc.setTextColor(...slate500);
   doc.setFont("helvetica", "normal");
-  doc.text('Program Pemberian Makanan Bergizi', 105, 30, { align: 'center' });
+  const subHeader = menu.kitchen_name 
+    ? `${menu.kitchen_name} | Program Makan Bergizi`
+    : 'Program Pemberian Makanan Bergizi';
+  doc.text(subHeader, 38, 27);
   
   // Separator
   doc.setDrawColor(226, 232, 240);
@@ -237,50 +288,83 @@ export const generateQCReportPDF = (menu: any) => {
   doc.setDrawColor(226, 232, 240);
   doc.line(15, 82, 195, 82);
 
-  // Nutrition Table Section
-  doc.setFontSize(12);
+  // Nutrition Table - Section 1: PORSI KECIL
+  doc.setFontSize(11);
   doc.setTextColor(...slate800);
   doc.setFont("helvetica", "bold");
-  doc.text('KANDUNGAN GIZI & DAFTAR MENU', 15, 92);
+  doc.text('I. ANALISIS GIZI PORSI KECIL (PAUD / SD)', 15, 92);
 
-  let totalKcal = 0;
-  let totalProtein = 0;
+  let totalKcalS = 0;
+  let totalProteinS = 0;
   
-  const tableBody = menu.items.map((item: any) => {
-    const weightPerPortion = parseFloat(item.weight_large) || parseFloat(item.weight_small) || 0;
-    const kcal = ((parseFloat(item.energy_kcal) || 0) * weightPerPortion) / 100;
-    const protein = ((parseFloat(item.protein_g) || 0) * weightPerPortion) / 100;
-    
-    totalKcal += kcal;
-    totalProtein += protein;
+  const bodySmall = menu.items.map((item: any) => {
+    const wS = parseFloat(item.weight_small) || 0;
+    const energy = parseFloat(item.energy_kcal) || 0;
+    const protein = parseFloat(item.protein_g) || 0;
+    const kS = (energy * wS) / 100;
+    const pS = (protein * wS) / 100;
+    totalKcalS += kS;
+    totalProteinS += pS;
 
-    return [
-      item.food_name || item.portion_name,
-      `${weightPerPortion.toFixed(0)} g`,
-      `${kcal.toFixed(1)} kcal`,
-      `${protein.toFixed(1)} g`
-    ];
+    return [item.food_name || item.portion_name, `${wS.toFixed(0)} g`, `${kS.toFixed(1)} kcal`, `${pS.toFixed(1)} g` ];
   });
 
-  tableBody.push([
-    { content: 'TOTAL AKUMULASI (PER PORSI)', styles: { fontStyle: 'bold', halign: 'right' } } as any,
+  bodySmall.push([
+    { content: 'TOTAL HARIAN PORSI KECIL', styles: { fontStyle: 'bold', halign: 'right' } } as any,
     '' as any,
-    { content: `${totalKcal.toFixed(1)} kcal`, styles: { fontStyle: 'bold', textColor: [16, 185, 129] } } as any,
-    { content: `${totalProtein.toFixed(1)} g`, styles: { fontStyle: 'bold', textColor: [16, 185, 129] } } as any
+    { content: `${totalKcalS.toFixed(1)} kcal`, styles: { fontStyle: 'bold', textColor: [16, 185, 129] } } as any,
+    { content: `${totalProteinS.toFixed(1)} g`, styles: { fontStyle: 'bold', textColor: [16, 185, 129] } } as any
   ]);
 
   autoTable(doc, {
     startY: 96,
-    head: [['Bahan Utama', 'Estimasi Berat (g)', 'Energi (Kkal)', 'Protein (g)']],
-    body: tableBody,
+    head: [['Bahan Utama', 'Estimasi Berat', 'Energi', 'Protein']],
+    body: bodySmall,
     theme: 'grid',
-    headStyles: { fillColor: slate800, textColor: [255, 255, 255], fontStyle: 'bold' },
-    styles: { fontSize: 9, cellPadding: 4, lineColor: [226, 232, 240], lineWidth: 0.1 },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
+    headStyles: { fillColor: [15, 118, 110], textColor: [255, 255, 255], fontStyle: 'bold' },
+    styles: { fontSize: 8.5, cellPadding: 3, lineColor: [226, 232, 240], lineWidth: 0.1 },
     margin: { left: 15, right: 15 }
   });
 
-  let currentY = (doc as any).lastAutoTable.finalY + 12;
+  // Nutrition Table - Section 2: PORSI BESAR
+  const nextY = (doc as any).lastAutoTable.finalY + 12;
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text('II. ANALISIS GIZI PORSI BESAR (SMP / SMA / GURU)', 15, nextY);
+
+  let totalKcalL = 0;
+  let totalProteinL = 0;
+  
+  const bodyLarge = menu.items.map((item: any) => {
+    const wL = parseFloat(item.weight_large) || 0;
+    const energy = parseFloat(item.energy_kcal) || 0;
+    const protein = parseFloat(item.protein_g) || 0;
+    const kL = (energy * wL) / 100;
+    const pL = (protein * wL) / 100;
+    totalKcalL += kL;
+    totalProteinL += pL;
+
+    return [item.food_name || item.portion_name, `${wL.toFixed(0)} g`, `${kL.toFixed(1)} kcal`, `${pL.toFixed(1)} g` ];
+  });
+
+  bodyLarge.push([
+    { content: 'TOTAL HARIAN PORSI BESAR', styles: { fontStyle: 'bold', halign: 'right' } } as any,
+    '' as any,
+    { content: `${totalKcalL.toFixed(1)} kcal`, styles: { fontStyle: 'bold', textColor: [30, 41, 59] } } as any,
+    { content: `${totalProteinL.toFixed(1)} g`, styles: { fontStyle: 'bold', textColor: [30, 41, 59] } } as any
+  ]);
+
+  autoTable(doc, {
+    startY: nextY + 4,
+    head: [['Bahan Utama', 'Estimasi Berat', 'Energi', 'Protein']],
+    body: bodyLarge,
+    theme: 'grid',
+    headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255], fontStyle: 'bold' },
+    styles: { fontSize: 8.5, cellPadding: 3, lineColor: [226, 232, 240], lineWidth: 0.1 },
+    margin: { left: 15, right: 15 }
+  });
+
+  let currentY = (doc as any).lastAutoTable.finalY + 10;
 
   // Organoleptic Section
   doc.setFillColor(248, 250, 252);
@@ -350,15 +434,19 @@ export const generateQCReportPDF = (menu: any) => {
   doc.text('Dinyatakan sah dan diotorisasi oleh:', 115, currentY + 6);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...slate800);
-  doc.text('Ahli Gizi / Kepala Dapur', 115, currentY + 12);
+  
+  const signerName = menu.nutritionist_name 
+    ? `${menu.nutritionist_name}${menu.nutritionist_title ? `, ${menu.nutritionist_title}` : ''}`
+    : 'Ahli Gizi / Kepala Dapur';
+  doc.text(signerName, 115, currentY + 50);
 
   if (menu.tanda_tangan_digital) {
     try {
-      doc.addImage(menu.tanda_tangan_digital, 'PNG', 115, currentY + 16, 70, 35);
+      doc.addImage(menu.tanda_tangan_digital, 'PNG', 115, currentY + 10, 70, 35);
     } catch (e) {
       doc.setFontSize(9);
       doc.setFont("helvetica", "italic");
-      doc.text('(Tanda tangan error)', 115, currentY + 35);
+      doc.text('(Tanda tangan error)', 115, currentY + 30);
     }
   }
 
@@ -372,10 +460,10 @@ export const generateQCReportPDF = (menu: any) => {
 
   // Footer
   const generatedDate = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: localeID });
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(...slate500);
   doc.setFont("helvetica", "italic");
-  doc.text(`Dicetak melalui Sistem Elektornik Nutrizi pada ${generatedDate} - Laporan Bebas Kertas No. ${menu.id}`, 105, 290, { align: 'center' });
+  doc.text(`Developed by Nadir under SKALADES Group | Dicetak pada ${generatedDate} - Laporan Bebas Kertas #${menu.id}`, 105, 290, { align: 'center' });
 
   // Save Document
   doc.save(`Laporan_QC_${menu.school_name.replace(/\s+/g, '_')}_${format(new Date(menu.menu_date), 'yyyyMMdd')}.pdf`);
@@ -392,16 +480,28 @@ export const generateLogisticsPDF = (dateStr: string, items: any[], targetedScho
   doc.setFillColor(...primary500);
   doc.rect(0, 0, 210, 8, 'F');
   
+  // Logo
+  try {
+    doc.addImage('/assets/logo-pdf.png', 'PNG', 15, 12, 16, 16);
+  } catch (e) {
+    console.error('Failed to load PDF logo:', e);
+  }
+
   // Header Text
-  doc.setFontSize(22);
+  doc.setFontSize(20);
   doc.setTextColor(...slate800);
   doc.setFont("helvetica", "bold");
-  doc.text('DAFTAR BELANJA LOGISTIK PUSAT', 105, 24, { align: 'center' });
-  
-  doc.setFontSize(11);
+  doc.text('DAFTAR BELANJA LOGISTIK PUSAT', 38, 21);
+
+  doc.setFontSize(10);
   doc.setTextColor(...slate500);
   doc.setFont("helvetica", "normal");
-  doc.text('Program Pemberian Makanan Bergizi', 105, 30, { align: 'center' });
+  // Try to find kitchen name from targeted schools or first item
+  const kitchenName = items[0]?.kitchen_name || ''; 
+  const subHeader = kitchenName 
+    ? `${kitchenName} | Program Makan Bergizi`
+    : 'Program Pemberian Makanan Bergizi';
+  doc.text(subHeader, 38, 27);
   
   // Separator
   doc.setDrawColor(226, 232, 240);
@@ -466,10 +566,10 @@ export const generateLogisticsPDF = (dateStr: string, items: any[], targetedScho
 
   // Footer stamp
   const generatedDate = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: localeID });
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(...slate500);
   doc.setFont("helvetica", "italic");
-  doc.text(`Dicetak melalui Sistem Elektornik Nutrizi pada ${generatedDate}`, 105, 290, { align: 'center' });
+  doc.text(`Developed by Nadir under SKALADES Group | Dicetak pada ${generatedDate} - Laporan Bebas Kertas Manual`, 105, 290, { align: 'center' });
 
   // Save the PDF
   doc.save(`Global_Logistics_${format(new Date(dateStr), 'yyyyMMdd')}.pdf`);

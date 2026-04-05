@@ -4,6 +4,19 @@ const redisClient = require('../config/redisClient');
 
 const CACHE_TTL = 86400; // 24 hours in seconds
 
+const clearFoodCache = async () => {
+  try {
+    // Clear all food search caches
+    const keys = await redisClient.keys('search:food:*');
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+      console.log('🧹 Food Cache cleared for: ', keys);
+    }
+  } catch (err) {
+    console.error('Failed to clear food cache:', err);
+  }
+};
+
 exports.calculateMeal = async (req, res) => {
   const { items } = req.body;
   if (!items || !Array.isArray(items)) {
@@ -81,6 +94,9 @@ exports.createFood = async (req, res) => {
   try {
     const food = await foodRepository.create(foodData);
     
+    // Clear search cache
+    await clearFoodCache();
+    
     if (conversions && Array.isArray(conversions)) {
       for (const conv of conversions) {
         await foodRepository.addConversion({ 
@@ -102,6 +118,10 @@ exports.updateFood = async (req, res) => {
   try {
     await foodRepository.update(req.params.id, foodData);
     
+    // Clear cache
+    await clearFoodCache();
+    await redisClient.del(`food:conversions:${req.params.id}`);
+    
     // For simplicity in update, we could sync conversions (delete existing and re-add or smart sync)
     // For now, let's just update the main data. SRT management can also be handled by the separate SRT modal 
     // but we will allow basic sync here.
@@ -116,6 +136,10 @@ exports.updateFood = async (req, res) => {
 exports.deleteFood = async (req, res) => {
   try {
     await foodRepository.delete(req.params.id);
+    
+    // Clear cache
+    await clearFoodCache();
+    await redisClient.del(`food:conversions:${req.params.id}`);
     res.json({ message: 'Food item deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting food item' });

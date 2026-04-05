@@ -16,6 +16,10 @@ interface School {
   large_portion_count: number;
   small_portion_count: number;
   location_address: string;
+  siswa_laki_laki?: number;
+  siswa_perempuan?: number;
+  guru_laki_laki?: number;
+  guru_perempuan?: number;
 }
 
 export default function SchoolsPage() {

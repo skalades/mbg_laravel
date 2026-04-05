@@ -1,4 +1,5 @@
 const authService = require('../services/authService');
+const userRepository = require('../repositories/userRepository');
 
 exports.register = async (req, res) => {
   const { username, password, role } = req.body;
@@ -32,7 +33,7 @@ exports.login = async (req, res) => {
 
     res.json({
       message: 'Login successful',
-      user: { id: user.id, username: user.username, role: user.role }
+      user: { id: user.id, username: user.username, role: user.role, kitchen_id: user.kitchen_id }
     });
   } catch (error) {
     res.status(401).json({ message: error.message });
@@ -66,5 +67,23 @@ exports.logout = async (req, res) => {
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    const user = await userRepository.findByUsername(req.user.username);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    res.json({
+      id: user.id,
+      username: user.username,
+      full_name: user.full_name,
+      title: user.title,
+      role: user.role,
+      kitchen_id: user.kitchen_id
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user profile', error: error.message });
   }
 };

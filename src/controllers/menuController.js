@@ -112,10 +112,24 @@ exports.createMasterMenu = async (req, res) => {
   }
 };
 
+exports.deleteMasterMenu = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const success = await masterMenuRepository.deleteById(id);
+    if (!success) {
+      return res.status(404).json({ message: 'Templat menu tidak ditemukan atau sudah terhapus.' });
+    }
+    res.json({ message: 'Templat menu berhasil dihapus.' });
+  } catch (error) {
+    console.error('❌ Delete Master Menu Error:', error);
+    res.status(500).json({ message: 'Gagal menghapus templat menu.', error: error.message });
+  }
+};
+
 exports.getDailyMenus = async (req, res) => {
   const { date } = req.query;
   try {
-    const menus = await menuService.getDailyMenus(date);
+    const menus = await menuService.getDailyMenus(date, req.kitchenId);
     res.json(menus);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching daily menus' });
@@ -147,7 +161,7 @@ exports.submitAudit = async (req, res) => {
 exports.getDailyLogisticsSummary = async (req, res) => {
   const { date } = req.query;
   try {
-    const summary = await menuService.getDailyLogisticsSummary(date);
+    const summary = await menuService.getDailyLogisticsSummary(date, req.kitchenId);
     res.json(summary);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching logistics summary', error: error.message });

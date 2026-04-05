@@ -90,8 +90,8 @@ const menuService = {
     }
   },
 
-  async getDailyMenus(date) {
-    return await dailyMenuRepository.getAllWithDetails(date);
+  async getDailyMenus(date, kitchenId = null) {
+    return await dailyMenuRepository.getAllWithDetails(date, kitchenId);
   },
 
   async getDailyMenuById(id) {
@@ -113,9 +113,9 @@ const menuService = {
     return await dailyMenuRepository.updateAudit(id, auditData);
   },
 
-  async getDailyLogisticsSummary(date) {
+  async getDailyLogisticsSummary(date, kitchenId = null) {
     const targetDate = date || new Date().toISOString().split('T')[0];
-    return await dailyMenuRepository.getDailyLogisticsSummary(targetDate);
+    return await dailyMenuRepository.getDailyLogisticsSummary(targetDate, kitchenId);
   }
 };
 

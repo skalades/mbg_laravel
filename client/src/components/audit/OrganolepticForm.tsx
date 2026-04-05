@@ -27,11 +27,11 @@ const OrganolepticForm: React.FC<OrganolepticFormProps> = ({
   notes, setNotes 
 }) => {
   const parameters = [
-    { key: 'warna', label: 'Warna (Visual)', description: 'Menarik & Sesuai Standar' },
-    { key: 'aroma', label: 'Aroma (Smell)', description: 'Segar & Menggugah Selera' },
-    { key: 'tekstur', label: 'Tekstur (Texture)', description: 'Tingkat kematangan pas' },
-    { key: 'rasa', label: 'Rasa (Taste)', description: 'Enak & Sesuai Bumbu' },
-    { key: 'suhu', label: 'Suhu (Temperature)', description: 'Hangat saat disajikan' },
+    { key: 'warna', label: 'Warna', description: 'Menarik & Sesuai Standar' },
+    { key: 'aroma', label: 'Aroma', description: 'Segar & Menggugah Selera' },
+    { key: 'tekstur', label: 'Tekstur', description: 'Tingkat kematangan pas' },
+    { key: 'rasa', label: 'Rasa', description: 'Enak & Sesuai Bumbu' },
+    { key: 'suhu', label: 'Suhu Penyajian', description: 'Hangat saat disajikan' },
   ];
 
   const handleScoreChange = (key: string, score: number) => {

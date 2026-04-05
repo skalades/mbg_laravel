@@ -1,8 +1,8 @@
 const schoolRepository = require('../repositories/schoolRepository');
 
 class SchoolService {
-  async getAllSchools() {
-    return await schoolRepository.getAll();
+  async getAllSchools(kitchenId = null) {
+    return await schoolRepository.getAll(kitchenId);
   }
 
   async getSchoolById(id) {
@@ -21,8 +21,14 @@ class SchoolService {
     return await schoolRepository.create(schoolData);
   }
 
-  async updateSchool(id, schoolData) {
-    await this.getSchoolById(id); // Ensure exists
+  async updateSchool(id, schoolData, kitchenId = null) {
+    const school = await this.getSchoolById(id);
+    
+    // If kitchenId is provided (Nutritionist), verify ownership
+    if (kitchenId && school.kitchen_id !== kitchenId) {
+      throw new Error('Unauthorized - You do not have permission to update this school');
+    }
+
     return await schoolRepository.update(id, schoolData);
   }
 

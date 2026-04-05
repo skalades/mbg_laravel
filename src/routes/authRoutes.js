@@ -23,4 +23,9 @@ router.post('/logout', verifyToken, authController.logout);
 // @access Public (Requires Refresh Cookie)
 router.post('/refresh', authController.refresh);
 
+// @route GET api/auth/me
+// @desc Get current user profile
+// @access Private
+router.get('/me', verifyToken, authController.getMe);
+
 module.exports = router;

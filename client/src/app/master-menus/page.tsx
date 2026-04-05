@@ -12,12 +12,29 @@ interface MasterMenu {
   created_at: string;
 }
 
+interface MasterMenuItem {
+  id: number;
+  food_item_id: number;
+  food_name?: string; // Optional if joined, but usually we just show portion_name
+  portion_name: string;
+  raw_weight_gram: number;
+  unit_name: string;
+  unit_quantity: number;
+}
+
+
 export default function MasterMenusPage() {
   const [menus, setMenus] = useState<MasterMenu[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newMenu, setNewMenu] = useState({ menu_name: "", target_group: "SD" });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Detail Modal State
+  const [selectedMenu, setSelectedMenu] = useState<(MasterMenu & { items: MasterMenuItem[] }) | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+
 
 
   useEffect(() => {
@@ -52,6 +69,43 @@ export default function MasterMenusPage() {
       setIsSaving(false);
     }
   };
+
+  const handleViewDetail = async (id: number) => {
+    setIsDetailLoading(true);
+    setIsDetailModalOpen(true);
+    try {
+      const res = await api.get(`/menus/master/${id}`);
+      setSelectedMenu(res.data);
+    } catch (err) {
+      console.error("Error fetching menu details:", err);
+      alert("Gagal mengambil detail menu.");
+      setIsDetailModalOpen(false);
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation(); // Prevent card clicks
+    
+    if (!window.confirm("Apakah Anda yakin ingin menghapus templat menu ini?")) return;
+    
+    console.log("Menghapus templat menu ID:", id);
+    try {
+      const res = await api.delete(`/menus/master/${id}`);
+      console.log("Delete success:", res.data);
+      
+      // Update local state for immediate feedback
+      setMenus(prev => prev.filter(m => m.id !== id));
+      
+      alert("Templat menu berhasil dihapus.");
+      // fetchMenus(); // Optional refresh to be sure
+    } catch (err: any) {
+      console.error("Gagal menghapus menu:", err.response?.data || err.message);
+      alert("Gagal menghapus menu: " + (err.response?.data?.message || err.message));
+    }
+  };
+
 
 
   return (
@@ -116,14 +170,26 @@ export default function MasterMenusPage() {
               </div>
 
               <div className="pt-6 border-t border-black/5 flex justify-between items-center">
-                <div className="text-[10px] text-outline font-medium">
-                  {new Date(menu.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}
+                <div className="flex items-center gap-3">
+                  <div className="text-[10px] text-outline font-medium">
+                    {new Date(menu.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}
+                  </div>
+                  <button 
+                    onClick={(e) => handleDelete(e, menu.id)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-outline/30 hover:bg-error-container hover:text-on-error-container transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                  </button>
                 </div>
-                <button className="text-primary font-bold text-xs flex items-center gap-1 hover:gap-2 transition-all">
+                <button 
+                  onClick={() => handleViewDetail(menu.id)}
+                  className="text-primary font-bold text-xs flex items-center gap-1 hover:gap-2 transition-all"
+                >
                   Lihat Detail
                   <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                 </button>
               </div>
+
             </div>
           ))}
         </div>
@@ -149,6 +215,7 @@ export default function MasterMenusPage() {
 
       {/* Create Modal */}
       {isModalOpen && (
+        /* ... existing create modal code ... */
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl border border-black/5 overflow-hidden animate-in zoom-in-95 duration-300">
@@ -195,6 +262,90 @@ export default function MasterMenusPage() {
           </div>
         </div>
       )}
+
+      {/* Detail Modal */}
+      {isDetailModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsDetailModalOpen(false)} />
+          <div className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl border border-black/5 overflow-hidden animate-in zoom-in-95 duration-300">
+            {isDetailLoading ? (
+              <div className="p-20 flex flex-col items-center justify-center space-y-4">
+                <span className="material-symbols-outlined text-5xl animate-spin text-primary">circle_loader</span>
+                <p className="text-slate-400 font-bold text-sm tracking-widest uppercase">Memuat Detail...</p>
+              </div>
+            ) : selectedMenu && (
+              <>
+                <div className="p-10 border-b border-slate-50 flex justify-between items-start">
+                  <div>
+                    <span className="bg-primary/10 text-primary text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 inline-block">
+                      {selectedMenu.target_group} Group
+                    </span>
+                    <h3 className="text-3xl font-black text-slate-900 font-headline leading-none">{selectedMenu.menu_name}</h3>
+                    <p className="text-slate-400 text-sm mt-3 flex items-center gap-2 italic">
+                       <span className="material-symbols-outlined text-sm">calendar_today</span>
+                       Terdaftar sejak {new Date(selectedMenu.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+                  <button onClick={() => setIsDetailModalOpen(false)} className="w-12 h-12 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 transition-colors">
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+                
+                <div className="p-10 max-h-[60vh] overflow-y-auto">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="material-symbols-outlined text-primary">restaurant_menu</span>
+                    <h4 className="font-bold text-slate-900 uppercase tracking-widest text-xs">Daftar Komposisi Bahan</h4>
+                  </div>
+                  
+                  {selectedMenu.items.length === 0 ? (
+                    <div className="p-10 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                       <p className="text-slate-400 text-sm font-medium">Belum ada bahan baku yang terdaftar di templat ini.</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3">
+                      {selectedMenu.items.map((item, idx) => (
+                        <div key={item.id || idx} className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-primary/20 transition-colors group">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors border border-slate-100 shadow-sm">
+                               <span className="material-symbols-outlined text-xl">lunch_dining</span>
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-900">{item.portion_name}</p>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                                {item.unit_quantity} {item.unit_name}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-black text-slate-900 leading-none">{item.raw_weight_gram}g</p>
+                            <p className="text-[10px] font-bold text-outline uppercase tracking-wider mt-1.5">Berat Mentah</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-10 bg-slate-50 flex justify-end gap-4">
+                    <button 
+                      onClick={() => setIsDetailModalOpen(false)}
+                      className="px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors"
+                    >
+                      Tutup
+                    </button>
+                    <button 
+                      className="bg-primary text-white px-8 py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-xl transition-all active:scale-[0.98]"
+                      onClick={() => { alert("Fitur edit akan tersedia segera!"); }}
+                    >
+                      Edit Komposisi
+                    </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
 
   );
