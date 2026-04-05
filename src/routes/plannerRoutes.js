@@ -1,25 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const plannerController = require('../controllers/plannerController');
-const { verifyToken, authorizeRole } = require('../middlewares/authMiddleware');
 
-// Planner routes require authentication
-router.use(verifyToken);
+// Public access mode — auth disabled
 
-// GET /api/planner/search - Search food (Nutritionist/Admin)
-router.get('/search', authorizeRole(['ADMIN', 'NUTRITIONIST']), plannerController.searchFood);
+// GET /api/planner/search - Search food
+router.get('/search', plannerController.searchFood);
 
 // GET /api/planner/food/:id/conversions - Get available units
-router.get('/food/:id/conversions', authorizeRole(['ADMIN', 'NUTRITIONIST']), plannerController.getFoodConversions);
-router.post('/food/:id/conversions', authorizeRole(['ADMIN']), plannerController.addFoodConversion);
+router.get('/food/:id/conversions', plannerController.getFoodConversions);
+router.post('/food/:id/conversions', plannerController.addFoodConversion);
 
-// Food Items Management (Phase 1 Gaps)
-router.get('/food', authorizeRole(['ADMIN', 'NUTRITIONIST']), plannerController.getAllFood);
-router.post('/food', authorizeRole(['ADMIN']), plannerController.createFood);
-router.put('/food/:id', authorizeRole(['ADMIN']), plannerController.updateFood);
-router.delete('/food/:id', authorizeRole(['ADMIN']), plannerController.deleteFood);
+// Food Items Management
+router.get('/food', plannerController.getAllFood);
+router.post('/food', plannerController.createFood);
+router.put('/food/:id', plannerController.updateFood);
+router.delete('/food/:id', plannerController.deleteFood);
 
 // POST /api/planner/calculate - Calculate meal nutrition
-router.post('/calculate', authorizeRole(['ADMIN', 'NUTRITIONIST']), plannerController.calculateMeal);
+router.post('/calculate', plannerController.calculateMeal);
 
 module.exports = router;
