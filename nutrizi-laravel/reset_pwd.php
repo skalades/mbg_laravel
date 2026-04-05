@@ -1,0 +1,1 @@
+<?php require 'vendor/autoload.php'; \ = require_once 'bootstrap/app.php'; \ = \->make(Illuminate\Contracts\Console\Kernel::class); \->bootstrap(); \ = App\Models\User::where('username', 'anissa')->first(); if (\) { \->password = Illuminate\Support\Facades\Hash::make('password'); \->save(); echo 'Reset Success'; } else { echo 'User Not Found'; }
