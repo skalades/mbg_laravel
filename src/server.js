@@ -58,6 +58,41 @@ app.get('/api', (req, res) => {
   });
 });
 
+// SYSTEM HEALTH CHECK (For Debugging)
+app.get('/api/health', async (req, res) => {
+  const db = require('./config/db');
+  const redisClient = require('./config/redisClient');
+  
+  let mysqlStatus = 'Checking...';
+  let redisStatus = 'Checking...';
+
+  try {
+    const [rows] = await db.execute('SELECT 1 + 1 AS result');
+    mysqlStatus = 'Connected (OK)';
+  } catch (err) {
+    mysqlStatus = `Connection Error: ${err.message}`;
+  }
+
+  try {
+    const isRedisOpen = redisClient.isOpen;
+    redisStatus = isRedisOpen ? 'Connected (OK)' : 'Reconnecting...';
+  } catch (err) {
+    redisStatus = `Connection Error: ${err.message}`;
+  }
+
+  res.json({
+    service: 'Nutrizi API',
+    status: 'Running',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV,
+    checks: {
+      mysql: mysqlStatus,
+      redis: redisStatus,
+      port: process.env.PORT || 3000
+    }
+  });
+});
+
 // Error Handling Middleware (Basic)
 app.use((err, req, res, next) => {
   console.error(err.stack);
