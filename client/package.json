@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "NEXT_PUBLIC_API_URL=https://apinutrizi.skalades.biz.id next build",
-    "start": "NEXT_PUBLIC_API_URL=https://apinutrizi.skalades.biz.id next start -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
     "lint": "eslint"
   },
   "dependencies": {

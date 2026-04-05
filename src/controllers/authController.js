@@ -21,7 +21,6 @@ exports.login = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      domain: process.env.COOKIE_DOMAIN || '.skalades.biz.id',
       maxAge: 15 * 60 * 1000
     });
 
@@ -29,7 +28,6 @@ exports.login = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      domain: process.env.COOKIE_DOMAIN || '.skalades.biz.id',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
@@ -52,7 +50,6 @@ exports.refresh = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      domain: process.env.COOKIE_DOMAIN || '.skalades.biz.id',
       maxAge: 15 * 60 * 1000
     });
     res.json({ message: 'Token refreshed' });
