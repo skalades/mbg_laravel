@@ -14,7 +14,7 @@ export default function Modal({
     onClose = () => {},
 }: PropsWithChildren<{
     show: boolean;
-    maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+    maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | '6xl';
     closeable?: boolean;
     onClose: CallableFunction;
 }>) {
@@ -30,6 +30,8 @@ export default function Modal({
         lg: 'sm:max-w-lg',
         xl: 'sm:max-w-xl',
         '2xl': 'sm:max-w-2xl',
+        '4xl': 'sm:max-w-4xl',
+        '6xl': 'sm:max-w-6xl',
     }[maxWidth];
 
     return (
@@ -41,26 +43,26 @@ export default function Modal({
                 onClose={close}
             >
                 <TransitionChild
-                    enter="ease-out duration-300"
+                    enter="ease-out duration-500"
                     enterFrom="opacity-0"
                     enterTo="opacity-100"
-                    leave="ease-in duration-200"
+                    leave="ease-in duration-300"
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="absolute inset-0 bg-gray-500/75" />
+                    <div className="absolute inset-0 bg-emerald-950/20 backdrop-blur-md" />
                 </TransitionChild>
 
                 <TransitionChild
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    enter="ease-out duration-500"
+                    enterFrom="opacity-0 translate-y-12 sm:translate-y-0 sm:scale-95"
                     enterTo="opacity-100 translate-y-0 sm:scale-100"
-                    leave="ease-in duration-200"
+                    leave="ease-in duration-300"
                     leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                    leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    leaveTo="opacity-0 translate-y-12 sm:translate-y-0 sm:scale-95"
                 >
                     <DialogPanel
-                        className={`mb-6 transform rounded-[2.5rem] bg-white shadow-2xl transition-transform sm:mx-auto sm:w-full ${maxWidthClass} relative z-50`}
+                        className={`mb-6 transform rounded-[3rem] bg-white/80 backdrop-blur-2xl border border-white/50 shadow-[0_32px_64px_-16px_rgba(6,78,59,0.2)] transition-all sm:mx-auto sm:w-full ${maxWidthClass} relative z-50 overflow-hidden ring-1 ring-emerald-900/5`}
                     >
                         {children}
                     </DialogPanel>

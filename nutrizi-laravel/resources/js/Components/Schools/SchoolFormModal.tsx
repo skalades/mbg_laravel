@@ -68,7 +68,7 @@ export default function SchoolFormModal({ isOpen, onClose, editingSchool }: Scho
 
     return (
         <Modal show={isOpen} onClose={onClose} maxWidth="2xl">
-            <div className="bg-white rounded-[3rem] p-10 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl relative text-[#4a5568]">
+            <div className="bg-transparent p-10 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar relative text-[#4a5568]">
                 <form onSubmit={submit} className="space-y-6">
                     {/* Modal Title */}
                     <div className="border-b border-slate-100 pb-4">

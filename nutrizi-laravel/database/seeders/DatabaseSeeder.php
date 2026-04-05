@@ -13,12 +13,22 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            KitchenSeeder::class,
+            SchoolSeeder::class,
+            PortionConfigSeeder::class,
             FoodItemSeeder::class,
         ]);
 
-        User::updateOrCreate(
+        $kitchen = \App\Models\Kitchen::first();
+
+        \App\Models\User::updateOrCreate(
             ['username' => 'admin'],
-            ['full_name' => 'Test Administrator', 'password' => bcrypt('password'), 'role' => 'ADMIN']
+            [
+                'full_name' => 'Test Administrator',
+                'password' => bcrypt('password'),
+                'role' => 'ADMIN',
+                'kitchen_id' => $kitchen ? $kitchen->id : null,
+            ]
         );
     }
 }

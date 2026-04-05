@@ -39,10 +39,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Portions
     Route::get('/portions', [PortionController::class, 'index'])->name('portions.index');
     
-    // Menus
-    Route::get('/menus', [MenuController::class, 'index'])->name('menus.index');
-
-    // Kitchens
+    // Menus (Katalog & Resep)
+    Route::resource('menus', MenuController::class);
+    
+    // Planner (Daily Menu Allocation)
+    Route::get('/planner', [PlannerController::class, 'index'])->name('planner.index');
+    Route::post('/planner', [PlannerController::class, 'store'])->name('planner.store');
+    Route::delete('/planner/{dailyMenu}', [PlannerController::class, 'destroy'])->name('planner.destroy');
     Route::get('/kitchens', [KitchenController::class, 'index'])->name('kitchens.index');
 
     // Audit

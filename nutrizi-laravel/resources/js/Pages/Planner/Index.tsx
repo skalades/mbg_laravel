@@ -1,76 +1,175 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { cn } from '@/lib/utils';
 import { PageProps } from '@/types';
+import { FormEventHandler } from 'react';
+import InputError from '@/Components/InputError';
+import InputLabel from '@/Components/InputLabel';
+import TextInput from '@/Components/TextInput';
+import PrimaryButton from '@/Components/PrimaryButton';
 
-export default function PlannerIndex({ auth }: PageProps) {
+interface School {
+    id: number;
+    school_name: string;
+}
+
+interface MasterMenu {
+    id: number;
+    menu_name: string;
+}
+
+interface DailyMenu {
+    id: number;
+    menu_date: string;
+    school: {
+        school_name: string;
+    };
+    master_menu: {
+        menu_name: string;
+    };
+    status: string;
+}
+
+interface PlannerProps extends PageProps {
+    schools: School[];
+    masterMenus: MasterMenu[];
+    dailyMenus: DailyMenu[];
+}
+
+export default function PlannerIndex({ schools, masterMenus, dailyMenus }: PlannerProps) {
+    const { data, setData, post, processing, errors, reset, delete: destroy } = useForm({
+        school_id: '',
+        master_menu_id: '',
+        menu_date: '',
+        status: 'TERPUBLIKASI'
+    });
+
+    const submit: FormEventHandler = (e) => {
+        e.preventDefault();
+        post(route('planner.store'), {
+            onSuccess: () => reset(),
+        });
+    };
+
+    const handleDelete = (id: number) => {
+        if (confirm('Hapus rencana menu ini?')) {
+            destroy(route('planner.destroy', id));
+        }
+    };
+
     return (
         <AuthenticatedLayout
             header="Perencanaan Menu"
         >
             <Head title="Smart Planner" />
 
-            <div className="space-y-8 animate-in fade-in duration-700">
+            <div className="space-y-12 animate-in fade-in duration-700">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                        <h2 className="text-3xl font-bold tracking-tight text-emerald-900 font-headline">Smart Planner</h2>
-                        <p className="text-emerald-800/60 mt-1 italic tracking-wide">
+                        <h2 className="text-3xl font-bold tracking-tight text-emerald-900 font-headline uppercase italic">Smart Planner</h2>
+                        <p className="text-emerald-800/60 mt-1 italic tracking-wide text-xs">
                             Susun siklus menu dengan dukungan AI dan analisis gizi otomatis.
                         </p>
                     </div>
-                    
-                    <div className="flex gap-4">
-                        <button className="bg-white text-emerald-900 border border-emerald-900/10 px-6 py-4 rounded-2xl font-black text-sm tracking-widest uppercase shadow-sm hover:bg-emerald-50 transition-all flex items-center gap-3">
-                            Unduh Laporan
-                            <span className="material-symbols-outlined">download</span>
-                        </button>
-                        <button className="bg-emerald-900 text-white px-8 py-4 rounded-2xl font-black text-sm tracking-widest uppercase shadow-xl shadow-emerald-900/20 hover:translate-y-[-2px] transition-all flex items-center gap-3">
-                            Siklus Baru
-                            <span className="material-symbols-outlined">add_task</span>
-                        </button>
-                    </div>
                 </div>
 
-                {/* Empty State / Coming Soon */}
-                <div className="bg-white p-20 rounded-[3rem] border border-emerald-900/5 shadow-sm text-center relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                    
-                    <div className="relative z-10 space-y-8">
-                        <div className="w-24 h-24 bg-emerald-50 text-emerald-900 rounded-[2rem] flex items-center justify-center mx-auto shadow-inner group-hover:scale-110 transition-transform duration-500">
-                            <span className="material-symbols-outlined text-4xl">auto_awesome</span>
-                        </div>
-                        
-                        <div className="max-w-md mx-auto space-y-4">
-                            <h3 className="text-2xl font-black text-emerald-900 font-headline">Modul Perencanaan Sedang Dioptimalkan</h3>
-                            <p className="text-emerald-800/50 leading-relaxed">
-                                Kami sedang mengintegrasikan mesin optimasi nutrisi untuk memastikan setiap menu memenuhi standar gizi MBG dengan biaya yang efisien.
-                            </p>
-                        </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    {/* Schedule Form */}
+                    <div className="lg:col-span-1">
+                        <section className="bg-white p-8 rounded-[2.5rem] border border-emerald-900/5 shadow-xl shadow-emerald-900/5 sticky top-8">
+                            <h3 className="text-sm font-black uppercase tracking-widest text-emerald-900 mb-8 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-emerald-500">add_task</span>
+                                Jadwalkan Menu
+                            </h3>
 
-                        <div className="flex justify-center gap-2">
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="w-2 h-2 rounded-full bg-emerald-900/20 animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                            <form onSubmit={submit} className="space-y-6">
+                                <div className="space-y-2">
+                                    <InputLabel value="Pilih Sekolah" className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40" />
+                                    <select
+                                        className="w-full border-emerald-900/10 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl shadow-sm text-sm font-bold"
+                                        value={data.school_id}
+                                        onChange={e => setData('school_id', e.target.value)}
+                                    >
+                                        <option value="">-- Pilih Sekolah --</option>
+                                        {schools.map(s => <option key={s.id} value={s.id}>{s.school_name}</option>)}
+                                    </select>
+                                    <InputError message={errors.school_id} />
+                                </div>
 
-                {/* Info Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white">
-                        <span className="material-symbols-outlined text-emerald-400 mb-6">analytics</span>
-                        <h4 className="font-black text-sm uppercase tracking-widest mb-2">Analisis Makro</h4>
-                        <p className="text-slate-400 text-xs">Pantau distribusi Karbohidrat, Protein, dan Lemak secara real-time saat Anda menyusun menu.</p>
+                                <div className="space-y-2">
+                                    <InputLabel value="Pilih Resep" className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40" />
+                                    <select
+                                        className="w-full border-emerald-900/10 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl shadow-sm text-sm font-bold"
+                                        value={data.master_menu_id}
+                                        onChange={e => setData('master_menu_id', e.target.value)}
+                                    >
+                                        <option value="">-- Pilih Resep --</option>
+                                        {masterMenus.map(m => <option key={m.id} value={m.id}>{m.menu_name}</option>)}
+                                    </select>
+                                    <InputError message={errors.master_menu_id} />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <InputLabel value="Tanggal Distribusi" className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40" />
+                                    <TextInput
+                                        type="date"
+                                        className="w-full border-emerald-900/10 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl shadow-sm"
+                                        value={data.menu_date}
+                                        onChange={e => setData('menu_date', e.target.value)}
+                                    />
+                                    <InputError message={errors.menu_date} />
+                                </div>
+
+                                <PrimaryButton className="w-full py-4 bg-emerald-900 rounded-2xl shadow-xl shadow-emerald-900/20 justify-center gap-2" disabled={processing}>
+                                    Tambahkan ke Jadwal
+                                    <span className="material-symbols-outlined text-sm">send</span>
+                                </PrimaryButton>
+                            </form>
+                        </section>
                     </div>
-                    <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white">
-                        <span className="material-symbols-outlined text-blue-400 mb-6">payments</span>
-                        <h4 className="font-black text-sm uppercase tracking-widest mb-2">Cost Tracking</h4>
-                        <p className="text-slate-400 text-xs">Estimasi biaya per porsi dihitung otomatis berdasarkan harga pasar terkini.</p>
-                    </div>
-                    <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white">
-                        <span className="material-symbols-outlined text-purple-400 mb-6">warning</span>
-                        <h4 className="font-black text-sm uppercase tracking-widest mb-2">Allergy Watch</h4>
-                        <p className="text-slate-400 text-xs">Peringatan otomatis jika menu mengandung bahan pemicu alergi bagi siswa tertentu.</p>
+
+                    {/* Schedule List */}
+                    <div className="lg:col-span-2">
+                        <section className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden min-h-[500px]">
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full -mr-48 -mt-48 blur-[120px]"></div>
+                            
+                            <h3 className="relative z-10 text-xl font-black font-headline mb-10">Agenda Distribusi</h3>
+
+                            <div className="relative z-10 space-y-4">
+                                {dailyMenus.length === 0 ? (
+                                    <div className="py-20 text-center text-slate-600 italic text-[10px] font-black uppercase tracking-[0.3em] border border-dashed border-white/5 rounded-[2rem]">
+                                        Belum ada jadwal distribusi terdaftar.
+                                    </div>
+                                ) : (
+                                    dailyMenus.map(dm => (
+                                        <div key={dm.id} className="bg-white/5 border border-white/5 p-6 rounded-[2rem] flex flex-col md:flex-row justify-between items-center gap-6 group hover:bg-white/10 transition-all">
+                                            <div className="flex items-center gap-6">
+                                                <div className="bg-emerald-500/10 text-emerald-400 p-4 rounded-2xl text-center min-w-[80px]">
+                                                    <div className="text-[10px] font-black uppercase">{new Date(dm.menu_date).toLocaleDateString('id-ID', { month: 'short' })}</div>
+                                                    <div className="text-2xl font-black">{new Date(dm.menu_date).toLocaleDateString('id-ID', { day: 'numeric' })}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs font-black uppercase tracking-widest text-emerald-400 mb-1">{dm.school?.school_name}</div>
+                                                    <div className="text-lg font-bold text-slate-100">{dm.master_menu?.menu_name}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-6">
+                                                <span className="inline-flex items-center gap-2 bg-slate-800 text-slate-400 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest">
+                                                    {dm.status}
+                                                </span>
+                                                <button 
+                                                    onClick={() => handleDelete(dm.id)}
+                                                    className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </section>
                     </div>
                 </div>
             </div>

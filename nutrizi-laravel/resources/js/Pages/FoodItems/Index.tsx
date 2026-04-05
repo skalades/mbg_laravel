@@ -300,22 +300,16 @@ export default function Index({ foodItems, filters, categories }: Props) {
             </div>
 
             <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)} maxWidth="2xl">
-                <div className="p-10 relative">
+                <div className="p-10 relative bg-transparent overflow-y-auto max-h-[90vh]">
                     <div className="flex items-center justify-between mb-10">
                         <div className="space-y-1">
-                            <h2 className="text-3xl font-bold font-headline text-emerald-900 leading-tight">
+                            <h2 className="text-3xl font-bold font-headline text-emerald-900 leading-tight uppercase tracking-tight">
                                 {selectedItem ? 'Edit Bahan' : 'Tambah Bahan Baru'}
                             </h2>
                             <p className="text-[10px] font-bold text-emerald-800/40 uppercase tracking-[0.3em]">
                                 {selectedItem ? 'Memperbarui data gizi katalog' : 'Menambahkan entri baru ke katalog gizi'}
                             </p>
                         </div>
-                        <button 
-                            onClick={() => setIsModalOpen(false)} 
-                            className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-800/60 hover:text-red-600 hover:bg-red-50 transition-all flex items-center justify-center group"
-                        >
-                            <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-500">close</span>
-                        </button>
                     </div>
 
                     <FoodItemForm 
