@@ -11,7 +11,11 @@ const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors({
-  origin: [process.env.CLIENT_URL || 'http://localhost:3000', 'http://localhost:3001'],
+  origin: [
+    process.env.CLIENT_URL || 'http://localhost:3000', 
+    'http://localhost:3001',
+    'https://nutrizi.skalades.biz.id'
+  ],
   credentials: true
 }));
 app.use(cookieParser());
