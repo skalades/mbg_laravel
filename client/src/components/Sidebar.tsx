@@ -2,9 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import api from "@/lib/axios";
 
 const menuItems = [
   { icon: "dashboard", label: "Dashboard", href: "/" },
@@ -20,32 +19,11 @@ const menuItems = [
 ];
 
 
-
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
 
-  const handleLogout = async () => {
-    try {
-      await api.post("/auth/logout");
-      // Clear local session
-      localStorage.removeItem("user");
-      // Redirect to login page
-      router.push("/login");
-      router.refresh(); 
-    } catch (err) {
-      console.error("Logout failed:", err);
-      localStorage.removeItem("user");
-      window.location.href = "/login";
-    }
-  };
-
-  // Get user from localStorage
-  const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem("user") || "{}") : {};
-  const isAdmin = user.role === 'ADMIN';
-
-  // Filter menu items
-  const filteredMenuItems = menuItems.filter(item => !item.adminOnly || isAdmin);
+  // Show all menu items in public mode
+  const filteredMenuItems = menuItems;
 
   return (
     <aside className="fixed inset-y-0 left-0 flex flex-col py-8 px-4 h-screen w-64 border-r-0 bg-emerald-50 z-50">
@@ -96,15 +74,6 @@ export default function Sidebar() {
             <span className="material-symbols-outlined mr-3 text-lg">help_outline</span>
             Bantuan & Layanan
           </Link>
-          <div className="pt-2">
-              <button 
-                onClick={handleLogout}
-                className="w-full text-left flex items-center px-2 py-2 text-sm text-rose-600/60 hover:text-rose-700 transition-colors"
-              >
-              <span className="material-symbols-outlined mr-3 text-lg">logout</span>
-              Keluar Sistem
-            </button>
-          </div>
         </div>
       </div>
     </aside>

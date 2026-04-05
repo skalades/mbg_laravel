@@ -2,6 +2,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { id as localeID } from 'date-fns/locale';
+import { DEFAULT_ASSIGNMENT, getDefaultUser } from './constants';
 
 export const generateKitchenInstructionPDF = (menu: any) => {
   const doc = new jsPDF();
@@ -32,9 +33,12 @@ export const generateKitchenInstructionPDF = (menu: any) => {
   doc.setTextColor(...slate500);
   doc.setFont("helvetica", "normal");
   const subHeader = menu.kitchen_name 
-    ? `${menu.kitchen_name} | Program Makan Bergizi`
-    : 'Program Pemberian Makanan Bergizi';
+    ? `${menu.kitchen_name} | ${DEFAULT_ASSIGNMENT.program}`
+    : `${DEFAULT_ASSIGNMENT.unit_name} | ${DEFAULT_ASSIGNMENT.program}`;
   doc.text(subHeader, 38, 27);
+  doc.setFontSize(7.5);
+  doc.text(`${DEFAULT_ASSIGNMENT.address} (${DEFAULT_ASSIGNMENT.institution})`, 38, 33);
+
   
   // Separator
   doc.setDrawColor(226, 232, 240);
@@ -198,7 +202,7 @@ export const generateKitchenInstructionPDF = (menu: any) => {
     doc.text(line, 20, finalY + 16 + (index * 6));
   });
 
-  // Signature Block
+  // Signature Block - Kitchen Instruction
   const sigY = finalY + 55;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
@@ -207,18 +211,16 @@ export const generateKitchenInstructionPDF = (menu: any) => {
   
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...slate800);
-  // Fallback to Anissa, SKM
-  const userJson = typeof window !== 'undefined' ? localStorage.getItem("user") : null;
-  const user = userJson ? JSON.parse(userJson) : { full_name: "Anissa, SKM", title: "Ahli Gizi" };
-  const kitchenSigner = user.full_name;
-  doc.text(kitchenSigner, 150, sigY + 20, { align: 'center' });
+  const currentUser = getDefaultUser();
+  doc.text(currentUser.full_name, 150, sigY + 20, { align: 'center' });
   
   doc.setDrawColor(...slate800);
   doc.setLineWidth(0.3);
   doc.line(125, sigY + 22, 175, sigY + 22);
   doc.setFont("helvetica", "italic");
   doc.setFontSize(8);
-  doc.text(user.title || 'Ahli Gizi / Kepala Dapur', 150, sigY + 26, { align: 'center' });
+  doc.text(currentUser.title || 'Ahli Gizi / Kepala Dapur', 150, sigY + 26, { align: 'center' });
+  doc.text(DEFAULT_ASSIGNMENT.unit_name, 150, sigY + 31, { align: 'center' });
 
   // Footer stamp
   const generatedDate = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: localeID });
@@ -457,12 +459,13 @@ export const generateQCReportPDF = (menu: any) => {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...slate800);
   
+  const currentUser = getDefaultUser();
   const userJson = typeof window !== 'undefined' ? localStorage.getItem("user") : null;
-  const user = userJson ? JSON.parse(userJson) : { full_name: "Anissa, SKM", title: "Ahli Gizi" };
+  const user = userJson ? JSON.parse(userJson) : currentUser;
   
   const signerName = menu.nutritionist_name 
     ? `${menu.nutritionist_name}${menu.nutritionist_title ? `, ${menu.nutritionist_title}` : ''}`
-    : `${user.full_name}, ${user.title}`;
+    : `${user.full_name}, ${user.title || 'Ahli Gizi'}`;
   doc.text(signerName, 115, currentY + 50);
 
   if (menu.tanda_tangan_digital) {
@@ -521,12 +524,15 @@ export const generateLogisticsPDF = (dateStr: string, items: any[], targetedScho
   doc.setFontSize(10);
   doc.setTextColor(...slate500);
   doc.setFont("helvetica", "normal");
-  // Try to find kitchen name from targeted schools or first item
   const kitchenName = items[0]?.kitchen_name || ''; 
   const subHeader = kitchenName 
-    ? `${kitchenName} | Program Makan Bergizi`
-    : 'Program Pemberian Makanan Bergizi';
+    ? `${kitchenName} | ${DEFAULT_ASSIGNMENT.program}`
+    : `${DEFAULT_ASSIGNMENT.unit_name} | ${DEFAULT_ASSIGNMENT.program}`;
   doc.text(subHeader, 38, 27);
+  
+  // SPPG Assignment line
+  doc.setFontSize(8);
+  doc.text(`${DEFAULT_ASSIGNMENT.address} (${DEFAULT_ASSIGNMENT.institution})`, 38, 33);
   
   // Separator
   doc.setDrawColor(226, 232, 240);
@@ -598,16 +604,16 @@ export const generateLogisticsPDF = (dateStr: string, items: any[], targetedScho
   
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...slate800);
-  const userJson = typeof window !== 'undefined' ? localStorage.getItem("user") : null;
-  const user = userJson ? JSON.parse(userJson) : { full_name: "Anissa, SKM", title: "Ahli Gizi" };
-  doc.text(user.full_name, 160, finalY + 25, { align: 'center' });
+  const currentUser2 = getDefaultUser();
+  doc.text(currentUser2.full_name, 160, finalY + 25, { align: 'center' });
   
   doc.setDrawColor(...slate800);
   doc.setLineWidth(0.3);
   doc.line(135, finalY + 27, 185, finalY + 27);
   doc.setFont("helvetica", "italic");
   doc.setFontSize(8);
-  doc.text(user.title || 'Tim Operasional Nutrizi', 160, finalY + 31, { align: 'center' });
+  doc.text(currentUser2.title || 'Tim Operasional Nutrizi', 160, finalY + 31, { align: 'center' });
+  doc.text(DEFAULT_ASSIGNMENT.unit_name, 160, finalY + 36, { align: 'center' });
 
   // Footer stamp
   const generatedDate = format(new Date(), 'dd/MM/yyyy HH:mm', { locale: localeID });
