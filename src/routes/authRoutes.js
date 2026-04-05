@@ -8,6 +8,11 @@ const { verifyToken, authorizeRole } = require('../middlewares/authMiddleware');
 // @access Private (Admin)
 router.post('/register', verifyToken, authorizeRole(['ADMIN']), authController.register);
 
+// @route GET api/auth/status
+// @desc Check API status
+// @access Public
+router.get('/status', authController.status);
+
 // @route POST api/auth/login
 // @desc Login user & set cookies
 // @access Public

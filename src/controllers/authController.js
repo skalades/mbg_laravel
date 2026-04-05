@@ -90,3 +90,11 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ message: 'Error fetching user profile', error: error.message });
   }
 };
+
+exports.status = async (req, res) => {
+  res.json({ 
+    status: 'online', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'production'
+  });
+};
