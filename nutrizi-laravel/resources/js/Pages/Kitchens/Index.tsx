@@ -1,20 +1,45 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
-import { cn } from '@/lib/utils';
+import { Head, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { useState } from 'react';
+import KitchenFormModal from '@/Components/Kitchens/KitchenFormModal';
+import { Settings2, Plus, Info, Trash2 } from 'lucide-react';
 
 interface Kitchen {
     id: number;
     kitchen_name: string;
-    location_address: string;
-    capacity: number;
+    location_address: string | null;
+    capacity: number | null;
+    default_buffer_count: number;
+    default_sample_count: number;
 }
 
 interface KitchensProps extends PageProps {
     kitchens: Kitchen[];
 }
 
-export default function KitchensIndex({ kitchens }: KitchensProps) {
+export default function KitchensIndex({ kitchens, auth }: KitchensProps) {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedKitchen, setSelectedKitchen] = useState<Kitchen | null>(null);
+
+    const openCreateModal = () => {
+        setSelectedKitchen(null);
+        setIsModalOpen(true);
+    };
+
+    const openEditModal = (kitchen: Kitchen) => {
+        setSelectedKitchen(kitchen);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = (kitchen: Kitchen) => {
+        if (confirm(`Apakah Anda yakin ingin menghapus unit kitchen "${kitchen.kitchen_name}"?`)) {
+            router.delete(route('kitchens.destroy', kitchen.id));
+        }
+    };
+
+    const isAdmin = auth.user.role === 'ADMIN';
+
     return (
         <AuthenticatedLayout
             header="Unit Produksi"
@@ -30,10 +55,15 @@ export default function KitchensIndex({ kitchens }: KitchensProps) {
                         </p>
                     </div>
                     
-                    <button className="bg-emerald-900 text-white px-8 py-4 rounded-2xl font-black text-sm tracking-widest uppercase shadow-xl shadow-emerald-900/20 hover:translate-y-[-2px] transition-all flex items-center gap-3">
-                        Tambah Unit
-                        <span className="material-symbols-outlined">add_business</span>
-                    </button>
+                    {isAdmin && (
+                        <button 
+                            onClick={openCreateModal}
+                            className="bg-emerald-900 text-white px-8 py-4 rounded-2xl font-black text-sm tracking-widest uppercase shadow-xl shadow-emerald-900/20 hover:translate-y-[-2px] transition-all flex items-center gap-3"
+                        >
+                            Tambah Unit
+                            <span className="material-symbols-outlined">add_business</span>
+                        </button>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -66,13 +96,25 @@ export default function KitchensIndex({ kitchens }: KitchensProps) {
                                             <span className="text-[10px] font-bold text-emerald-800/40">porsi / hari</span>
                                         </div>
                                     </div>
-                                    <div className="flex justify-end items-end">
-                                        <Link 
-                                            href={`/kitchens/${kitchen.id}`}
-                                            className="px-6 py-3 bg-emerald-50 text-emerald-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-900 hover:text-white transition-all shadow-sm"
-                                        >
-                                            Kelola Unit
-                                        </Link>
+                                    <div className="flex justify-end items-center gap-3">
+                                        {isAdmin && (
+                                            <>
+                                                <button 
+                                                    onClick={() => handleDelete(kitchen)}
+                                                    className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                                                    title="Hapus Unit"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                                <button 
+                                                    onClick={() => openEditModal(kitchen)}
+                                                    className="px-6 py-3 bg-emerald-50 text-emerald-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-900 hover:text-white transition-all shadow-sm flex items-center gap-2"
+                                                >
+                                                    <Settings2 className="w-4 h-4" />
+                                                    Kelola Unit
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -80,6 +122,12 @@ export default function KitchensIndex({ kitchens }: KitchensProps) {
                     )}
                 </div>
             </div>
+
+            <KitchenFormModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+                kitchen={selectedKitchen} 
+            />
         </AuthenticatedLayout>
     );
 }

@@ -3,10 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToKitchen;
 
 class Kitchen extends Model
 {
-    protected $fillable = ['kitchen_name', 'address'];
+    use BelongsToKitchen;
+
+    protected $fillable = [
+        'kitchen_name', 
+        'location_address',
+        'capacity',
+        'default_buffer_count',
+        'default_sample_count'
+    ];
 
     public function schools()
     {

@@ -13,11 +13,9 @@ class SchoolController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $kitchenId = $user->kitchen_id;
-
-        $schools = School::when($kitchenId, fn($q) => $q->where('kitchen_id', $kitchenId))
-            ->orderBy('school_name')
-            ->get();
+        
+        // Global scope BelongsToKitchen automatically filters this for non-admins
+        $schools = School::orderBy('school_name')->get();
 
         return Inertia::render('Schools/Index', [
             'schools' => $schools,
@@ -27,10 +25,8 @@ class SchoolController extends Controller
 
     public function store(StoreSchoolRequest $request)
     {
-        $validated = $request->validated();
-        $validated['kitchen_id'] = Auth::user()->kitchen_id;
-
-        School::create($validated);
+        // kitchen_id is automatically assigned by BelongsToKitchen trait
+        School::create($request->validated());
 
         return redirect()->route('schools.index')->with('success', 'Sekolah berhasil ditambahkan.');
     }

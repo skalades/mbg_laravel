@@ -22,4 +22,22 @@ class PortionController extends Controller
             'portions' => $portions
         ]);
     }
+
+    /**
+     * Update the specified portion configuration.
+     */
+    public function update(Request $request, PortionConfig $portion)
+    {
+        $validated = $request->validate([
+            'meal_energy' => 'required|numeric|min:0',
+            'meal_protein' => 'required|numeric|min:0',
+            'meal_fat' => 'required|numeric|min:0',
+            'meal_carbs' => 'required|numeric|min:0',
+            'multiplier' => 'required|numeric|min:1',
+        ]);
+
+        $portion->update($validated);
+
+        return redirect()->back();
+    }
 }

@@ -3,10 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToKitchen;
 
 class MasterMenu extends Model
 {
-    protected $fillable = ['menu_name', 'target_group', 'created_by'];
+    use BelongsToKitchen;
+
+    protected $fillable = ['menu_name', 'target_group', 'cooking_instructions', 'created_by', 'kitchen_id'];
+
+    protected $casts = [
+        'target_group' => 'array',
+    ];
 
     public function items()
     {

@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToKitchen;
 
 class DailyMenu extends Model
 {
+    use BelongsToKitchen;
+
     protected $fillable = [
         'school_id', 
         'menu_date', 
@@ -13,7 +16,8 @@ class DailyMenu extends Model
         'buffer_portions', 
         'organoleptic_portions', 
         'master_menu_id', 
-        'created_by'
+        'created_by',
+        'kitchen_id'
     ];
 
     public function school()

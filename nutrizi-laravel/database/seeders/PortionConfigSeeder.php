@@ -15,19 +15,19 @@ class PortionConfigSeeder extends Seeder
         $standards = [
             [
                 'name' => 'Porsi Besar',
-                'multiplier' => 1.34,
-                'meal_energy' => 850,
-                'meal_protein' => 30.0,
-                'meal_fat' => 24.0,
-                'meal_carbs' => 128.0,
+                'multiplier' => 1.37,
+                'meal_energy' => 644.5,
+                'meal_protein' => 18.3,
+                'meal_fat' => 21.3,
+                'meal_carbs' => 95.3,
             ],
             [
                 'name' => 'Porsi Kecil',
                 'multiplier' => 1.00,
-                'meal_energy' => 635,
-                'meal_protein' => 22.0,
-                'meal_fat' => 18.0,
-                'meal_carbs' => 96.0,
+                'meal_energy' => 469.9,
+                'meal_protein' => 10.5,
+                'meal_fat' => 16.0,
+                'meal_carbs' => 72.0,
             ],
         ];
 

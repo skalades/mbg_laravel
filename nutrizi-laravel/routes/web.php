@@ -13,6 +13,7 @@ use App\Http\Controllers\KitchenController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\PortionController;
 use App\Http\Controllers\FoodItemController;
+use App\Http\Controllers\UserController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -20,6 +21,9 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Users
+    Route::resource('users', UserController::class);
     
     // Food Items (Katalog Bahan Gizi)
     Route::resource('food-items', FoodItemController::class);
@@ -35,21 +39,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Planner
     Route::get('/planner', [PlannerController::class, 'index'])->name('planner.index');
+    Route::post('/planner', [PlannerController::class, 'store'])->name('planner.store');
+    Route::delete('/planner/{dailyMenu}', [PlannerController::class, 'destroy'])->name('planner.destroy');
     
     // Portions
     Route::get('/portions', [PortionController::class, 'index'])->name('portions.index');
+    Route::patch('/portions/{portion}', [PortionController::class, 'update'])->name('portions.update');
     
     // Menus (Katalog & Resep)
     Route::resource('menus', MenuController::class);
     
-    // Planner (Daily Menu Allocation)
-    Route::get('/planner', [PlannerController::class, 'index'])->name('planner.index');
-    Route::post('/planner', [PlannerController::class, 'store'])->name('planner.store');
-    Route::delete('/planner/{dailyMenu}', [PlannerController::class, 'destroy'])->name('planner.destroy');
-    Route::get('/kitchens', [KitchenController::class, 'index'])->name('kitchens.index');
+    Route::resource('kitchens', KitchenController::class);
 
-    // Audit
+    // Audit & QC
     Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
+    Route::post('/audit', [AuditController::class, 'store'])->name('audit.store');
+    Route::get('/audit/export', [AuditController::class, 'exportPdf'])->name('audit.export');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

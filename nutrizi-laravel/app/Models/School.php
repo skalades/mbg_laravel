@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToKitchen;
 
 class School extends Model
 {
+    use BelongsToKitchen;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -20,7 +23,9 @@ class School extends Model
         'siswa_laki_laki',
         'siswa_perempuan',
         'guru_laki_laki',
-        'guru_perempuan'
+        'guru_perempuan',
+        'buffer_count',
+        'sample_count'
     ];
 
     public function kitchen()

@@ -1,6 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler, useState, useEffect, useMemo } from 'react';
+import { PageProps } from '@/types';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -31,11 +32,22 @@ interface MenuItem {
 interface Menu {
     id: number;
     menu_name: string;
-    target_group: string;
+    target_group: string[];
+    cooking_instructions: string | null;
     items: MenuItem[];
 }
 
-interface Props {
+interface PortionConfig {
+    id: number;
+    portion_name: string;
+    meal_energy: number;
+    meal_protein: number;
+    meal_fat: number;
+    meal_carbs: number;
+    multiplier: number;
+}
+
+type Props = PageProps<{
     menu: Menu;
     foodItems: FoodItem[];
     schools: {
@@ -48,12 +60,18 @@ interface Props {
         small_portion_count: number;
         large_portion_count: number;
     }[];
-}
+    portion_configs: Record<string, PortionConfig>;
+}>;
 
 export default function EditMenu({ menu, foodItems, schools }: Props) {
+    const { portion_configs } = usePage<Props>().props;
+
+    const configSmall = portion_configs['Porsi Kecil'];
+    const configLarge = portion_configs['Porsi Besar'];
     const { data, setData, patch, processing, errors } = useForm({
         menu_name: menu.menu_name,
-        target_group: menu.target_group,
+        target_group: Array.isArray(menu.target_group) ? menu.target_group : [menu.target_group],
+        cooking_instructions: menu.cooking_instructions || '',
         items: menu.items.map(item => ({
             ...item,
             food_item: item.food_item // Ensure food_item is present for calculations
@@ -121,7 +139,7 @@ export default function EditMenu({ menu, foodItems, schools }: Props) {
                 food_item_id: fi.id, 
                 portion_name: fi.category || 'Lauk', 
                 weight_small: fi.base_quantity, 
-                weight_large: Math.round(fi.base_quantity * 1.34),
+                weight_large: Math.round(fi.base_quantity * (configLarge?.multiplier || 1.37)),
                 food_item: fi
             }
         ]);
@@ -162,7 +180,7 @@ export default function EditMenu({ menu, foodItems, schools }: Props) {
                                 <span className="material-symbols-outlined">arrow_back</span>
                             </Link>
                             <div>
-                                <h1 className="text-2xl font-black text-emerald-955 font-headline uppercase tracking-tight">Edit Resep: {menu.menu_name}</h1>
+                                <h1 className="text-2xl font-black text-emerald-950 font-headline uppercase tracking-tight">Edit Resep: {menu.menu_name}</h1>
                                 <p className="text-emerald-800/40 text-[10px] font-black uppercase tracking-widest leading-none mt-1">Sistem Dua-Porsi Teroptimasi</p>
                             </div>
                         </div>
@@ -208,17 +226,30 @@ export default function EditMenu({ menu, foodItems, schools }: Props) {
                                 )}
                             </div>
 
-                            <div className="bg-emerald-50/50 px-6 py-3 rounded-2xl border border-emerald-900/5 flex items-center gap-3">
+                            <div className="bg-emerald-50/50 px-6 py-4 rounded-2xl border border-emerald-900/5 flex items-center gap-4">
                                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40">Target</span>
-                                <select 
-                                    className="bg-transparent border-none p-0 text-sm font-black text-emerald-900 focus:ring-0"
-                                    value={data.target_group}
-                                    onChange={e => setData('target_group', e.target.value)}
-                                >
-                                    <option value="SD">SD (Elementary)</option>
-                                    <option value="SMP">SMP (Junior High)</option>
-                                    <option value="SMA">SMA (Senior High)</option>
-                                </select>
+                                <div className="flex gap-2">
+                                    {['SD', 'SMP', 'SMA'].map((level) => (
+                                        <button
+                                            key={level}
+                                            type="button"
+                                            onClick={() => {
+                                                const current = Array.isArray(data.target_group) ? data.target_group : [];
+                                                const next = current.includes(level)
+                                                    ? current.filter(l => l !== level)
+                                                    : [...current, level];
+                                                setData('target_group', next);
+                                            }}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                                                data.target_group?.includes(level)
+                                                    ? 'bg-emerald-600 text-white shadow-sm'
+                                                    : 'bg-white text-emerald-900/40 hover:text-emerald-900 hover:bg-emerald-100'
+                                            }`}
+                                        >
+                                            {level}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             <TextInput
@@ -233,6 +264,23 @@ export default function EditMenu({ menu, foodItems, schools }: Props) {
                                 Perbarui Resep
                             </PrimaryButton>
                         </div>
+                    </div>
+
+                    {/* Cooking Instructions Section */}
+                    <div className="bg-white p-10 rounded-[3rem] border border-emerald-900/5 shadow-sm">
+                         <div className="flex items-center gap-3 mb-6">
+                            <span className="material-symbols-outlined text-emerald-900/40">description</span>
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40">Instruksi Dapur & Prosedur Masak</h3>
+                        </div>
+                        <textarea 
+                            value={data.cooking_instructions}
+                            onChange={(e) => setData('cooking_instructions', e.target.value)}
+                            placeholder="Tuliskan panduan memasak atau instruksi khusus untuk tim dapur di sini..."
+                            className="w-full bg-slate-50 border-none rounded-[2rem] p-8 text-sm font-bold text-emerald-950 focus:ring-2 focus:ring-emerald-500/10 min-h-[150px] transition-all"
+                        />
+                        <p className="mt-4 text-[9px] text-emerald-800/40 italic font-medium px-4">
+                            * Instruksi ini akan muncul di halaman Audit QC sebagai panduan verifikasi kualitas bagi Ahli Gizi.
+                        </p>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -377,18 +425,18 @@ export default function EditMenu({ menu, foodItems, schools }: Props) {
                                                 <div className="text-xs font-medium text-slate-400 italic">kkal</div>
                                                 <div className={cn(
                                                     "mt-2 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest",
-                                                    totals.small.energy < 635 ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-400"
+                                                    totals.small.energy < (configSmall?.meal_energy || 469.9) ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-400"
                                                 )}>
-                                                    {totals.small.energy < 635 ? 'UNDER STANDARD' : 'IDEAL'}
+                                                    {totals.small.energy < (configSmall?.meal_energy || 469.9) ? 'UNDER STANDARD' : 'IDEAL'}
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="space-y-3 pt-4 border-t border-white/5">
                                             {[
-                                                { label: 'Protein', value: totals.small.protein, target: 22 },
-                                                { label: 'Lemak', value: totals.small.fat, target: 18 },
-                                                { label: 'Karbohidrat', value: totals.small.carbs, target: 96 }
+                                                { label: 'Protein', value: totals.small.protein, target: configSmall?.meal_protein || 10.5 },
+                                                { label: 'Lemak', value: totals.small.fat, target: configSmall?.meal_fat || 16.0 },
+                                                { label: 'Karbohidrat', value: totals.small.carbs, target: configSmall?.meal_carbs || 72.0 }
                                             ].map(macro => (
                                                 <div key={macro.label} className="space-y-2">
                                                     <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter">
@@ -417,18 +465,18 @@ export default function EditMenu({ menu, foodItems, schools }: Props) {
                                                 <div className="text-xs font-medium text-slate-400 italic">kkal</div>
                                                 <div className={cn(
                                                     "mt-2 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest",
-                                                    totals.large.energy < 850 ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-400"
+                                                    totals.large.energy < (configLarge?.meal_energy || 644.5) ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-400"
                                                 )}>
-                                                    {totals.large.energy < 850 ? 'UNDER STANDARD' : 'IDEAL'}
+                                                    {totals.large.energy < (configLarge?.meal_energy || 644.5) ? 'UNDER STANDARD' : 'IDEAL'}
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="space-y-3 pt-4 border-t border-white/5">
                                             {[
-                                                { label: 'Protein', value: totals.large.protein, target: 30 },
-                                                { label: 'Lemak', value: totals.large.fat, target: 24 },
-                                                { label: 'Karbohidrat', value: totals.large.carbs, target: 128 }
+                                                { label: 'Protein', value: totals.large.protein, target: configLarge?.meal_protein || 18.3 },
+                                                { label: 'Lemak', value: totals.large.fat, target: configLarge?.meal_fat || 21.3 },
+                                                { label: 'Karbohidrat', value: totals.large.carbs, target: configLarge?.meal_carbs || 95.3 }
                                             ].map(macro => (
                                                 <div key={macro.label} className="space-y-2">
                                                     <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter">

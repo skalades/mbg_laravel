@@ -13,16 +13,14 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $kitchenId = $user->kitchen_id;
 
-        // Basic Stats
+        // Global Scopes from BelongsToKitchen trait will automatically handle 
+        // the filtering for non-admins based on their kitchen_id.
         $stats = [
-            'total_schools' => School::when($kitchenId, fn($q) => $q->where('kitchen_id', $kitchenId))->count(),
-            'total_menus' => DailyMenu::when($kitchenId, function($q) use ($kitchenId) {
-                return $q->whereHas('school', fn($sq) => $sq->where('kitchen_id', $kitchenId));
-            })->count(),
-            'active_beneficiaries' => School::when($kitchenId, fn($q) => $q->where('kitchen_id', $kitchenId))->sum('total_beneficiaries'),
-            'compliance_rate' => 98 // Still placeholder for now
+            'total_schools' => School::count(),
+            'total_menus' => DailyMenu::count(),
+            'active_beneficiaries' => School::sum('total_beneficiaries'),
+            'compliance_rate' => 98 // Placeholder for now
         ];
 
         // Mock Activity for now, will be replaced with real audit/menu logs

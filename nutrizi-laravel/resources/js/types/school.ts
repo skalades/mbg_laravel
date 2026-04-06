@@ -11,6 +11,8 @@ export interface School {
     siswa_perempuan: number | null;
     guru_laki_laki: number | null;
     guru_perempuan: number | null;
+    buffer_count: number | null;
+    sample_count: number | null;
     kitchen_id?: number | null;
     created_at?: string;
     updated_at?: string;

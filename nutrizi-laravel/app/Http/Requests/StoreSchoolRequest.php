@@ -24,7 +24,7 @@ class StoreSchoolRequest extends FormRequest
         return [
             'school_name' => 'required|string|max:255',
             'target_group' => 'nullable|string|max:255',
-            'total_beneficiaries' => 'required|integer|min:0',
+            'total_beneficiaries' => 'nullable|integer|min:0',
             'total_teachers' => 'nullable|integer|min:0',
             'large_portion_count' => 'nullable|integer|min:0',
             'small_portion_count' => 'nullable|integer|min:0',
@@ -33,6 +33,8 @@ class StoreSchoolRequest extends FormRequest
             'siswa_perempuan' => 'nullable|integer|min:0',
             'guru_laki_laki' => 'nullable|integer|min:0',
             'guru_perempuan' => 'nullable|integer|min:0',
+            'buffer_count' => 'nullable|integer|min:0',
+            'sample_count' => 'nullable|integer|min:0',
         ];
     }
 
@@ -41,6 +43,9 @@ class StoreSchoolRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        // Any transformations (e.g. string sanitization) would go here
+        $this->merge([
+            'total_beneficiaries' => (int) ($this->siswa_laki_laki ?? 0) + (int) ($this->siswa_perempuan ?? 0),
+            'total_teachers' => (int) ($this->guru_laki_laki ?? 0) + (int) ($this->guru_perempuan ?? 0),
+        ]);
     }
 }

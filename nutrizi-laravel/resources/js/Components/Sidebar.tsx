@@ -3,16 +3,16 @@ import { Link, usePage } from "@inertiajs/react";
 import { cn } from "@/lib/utils";
 
 const menuItems = [
-  { icon: "dashboard", label: "Dashboard", href: "/dashboard" },
-  { icon: "restaurant_menu", label: "Penyusun Menu (Planner)", href: "/planner" },
-  { icon: "library_books", label: "Pustaka Menu Induk", href: "/menus" },
-  { icon: "camera_alt", label: "Audit & Kontrol QC", href: "/audit" },
-  { icon: "local_shipping", label: "Pelacak Logistik", href: "/kitchens" }, // Modified to kitchen tracker
-  { icon: "school", label: "Sekolah & Siswa", href: "/schools" },
-  { icon: "nutrition", label: "Katalog Bahan Gizi", href: "/food-items" },
-  { icon: "scale", label: "Manajemen Porsi", href: "/portions" },
-  { icon: "kitchen", label: "Manajemen Dapur", href: "/kitchens", adminOnly: true },
-  { icon: "manage_accounts", label: "Manajemen Pengguna", href: "/users", adminOnly: true },
+  { id: "dashboard", icon: "dashboard", label: "Dashboard", href: "/dashboard" },
+  { id: "planner", icon: "restaurant_menu", label: "Penyusun Menu (Planner)", href: "/planner" },
+  { id: "menus", icon: "library_books", label: "Pustaka Menu Induk", href: "/menus" },
+  { id: "audit", icon: "camera_alt", label: "Audit & Kontrol QC", href: "/audit" },
+  { id: "logistics", icon: "local_shipping", label: "Pelacak Logistik", href: "/kitchens" },
+  { id: "schools", icon: "school", label: "Sekolah & Siswa", href: "/schools" },
+  { id: "food-items", icon: "nutrition", label: "Katalog Bahan Gizi", href: "/food-items" },
+  { id: "portions", icon: "scale", label: "Manajemen Porsi", href: "/portions" },
+  { id: "kitchen-mgmt", icon: "kitchen", label: "Manajemen Dapur", href: "/kitchens", adminOnly: true },
+  { id: "user-mgmt", icon: "manage_accounts", label: "Manajemen Pengguna", href: "/users", adminOnly: true },
 ];
 
 export default function Sidebar() {
@@ -44,7 +44,7 @@ export default function Sidebar() {
           const isActive = url === item.href || url.startsWith(item.href + '/');
           return (
             <Link
-              key={item.href}
+              key={item.id}
               href={item.href}
               className={cn(
                 "flex items-center px-4 py-3 rounded-xl transition-all duration-200",
